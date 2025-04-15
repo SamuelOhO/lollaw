@@ -20,7 +20,6 @@ export default function HomePage() {
 
   const handleLogin = async () => {
     console.log(location.origin),
-
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
