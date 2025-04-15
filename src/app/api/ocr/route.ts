@@ -1,5 +1,5 @@
 // src/app/api/ocr/route.ts
 
-export async function POST(_req: Request) {
-    return new Response("OCR API endpoint (placeholder)", { status: 200 })
+export async function POST() {
+    return new Response("OCR API 준비 중입니다.", { status: 200 })
   }
