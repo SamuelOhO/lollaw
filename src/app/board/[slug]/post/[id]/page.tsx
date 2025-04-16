@@ -2,7 +2,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
+// import Link from 'next/link'
 
 interface PageProps {
   params: Promise<{
@@ -12,11 +12,11 @@ interface PageProps {
 }
 
 export default async function PostDetailPage({ params }: PageProps) {
-  const { slug, id } = await params
+  const { id } = await params
 
   // 쿠키 세션 처리
   const cookieStore = await cookies()
-  const cookieObject = Object.fromEntries(cookieStore.getAll().map(c => [c.name, c.value]))
+//   const cookieObject = Object.fromEntries(cookieStore.getAll().map(c => [c.name, c.value]))
 
 //   const supabase = createServerClient(
 //     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,7 +47,7 @@ const supabase = createServerClient(
     }
   }
 )
-console.log('📦 서버 쿠키 목록:', cookieStore.getAll())
+// console.log('📦 서버 쿠키 목록:', cookieStore.getAll())
   const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
 console.log('🧠 서버 세션 확인:', session)
@@ -68,12 +68,12 @@ console.log('⚠️ 세션 에러:', sessionError)
     notFound()
   }
 
-  // 2. 카테고리 확인
-  const { data: category } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+//   // 2. 카테고리 확인
+//   const { data: category } = await supabase
+//     .from('categories')
+//     .select('*')
+//     .eq('slug', slug)
+//     .single()
 
 //   if (category?.requires_auth) {
 //     const { data: { session } } = await supabase.auth.getSession()

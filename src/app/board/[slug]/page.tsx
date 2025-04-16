@@ -1,6 +1,4 @@
 // // app/board/[slug]/page.tsx
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
@@ -47,7 +45,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
       notFound()
     }
 
-    const { data: { session } } = await supabase.auth.getSession()
+    // const { data: { session } } = await supabase.auth.getSession()
 
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
