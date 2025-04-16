@@ -41,7 +41,8 @@ export default function LoginPage() {
       // 기존 code verifier 제거
       localStorage.removeItem('supabase.auth.code_verifier')
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      // data 변수 제거하고 error만 구조분해
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
