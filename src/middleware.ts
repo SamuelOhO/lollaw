@@ -87,7 +87,7 @@ export async function middleware(req: NextRequest) {
       // 세션 새로고침 - 여기서 중요한 것은 getSession 호출 자체가 세션을 새로고침함
       await supabase.auth.getSession()
       const { data: { session }, error } = await supabase.auth.getSession()
-      console.log('💾 Middleware 세션:', session)
+    //   console.log('💾 Middleware 세션:', session)
       // 변경된 쿠키가 포함된 응답을 반환
       return res
     } catch (error) {
