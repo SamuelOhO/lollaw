@@ -98,6 +98,91 @@
 //   return <p className="p-6 text-center">로그인 처리 중입니다...</p>
 // }
 
+// // app/auth/callback/page.tsx
+// 'use client'
+// import { useEffect } from 'react'
+// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+
+// export default function AuthCallback() {
+//   const supabase = createClientComponentClient()
+  
+//   useEffect(() => {
+//     const handleCallback = async () => {
+//       try {
+//         const searchParams = new URLSearchParams(window.location.search)
+//         const code = searchParams.get('code')
+        
+//         if (!code) {
+//           throw new Error('인증 코드가 없습니다')
+//         }
+
+//         // 세션 교환
+//         const { error } = await supabase.auth.exchangeCodeForSession(code)
+        
+//         if (error) {
+//           throw error
+//         }
+
+//         // 세션 교환 후 바로 community로 이동
+//         window.location.replace('/community')
+
+//       } catch (error) {
+//         console.error('인증 콜백 처리 오류:', error)
+//         window.location.replace('/login')
+//       }
+//     }
+
+//     handleCallback()
+//   }, [supabase])
+
+//   return (
+//     <div className="flex min-h-screen items-center justify-center">
+//       <div className="animate-pulse text-center">
+//         <p className="text-lg">로그인 처리 중입니다...</p>
+//       </div>
+//     </div>
+//   )
+// }
+
+// // app/auth/callback/page.tsx
+// 'use client'
+// import { useEffect } from 'react'
+// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+
+// export default function AuthCallback() {
+//   const supabase = createClientComponentClient()
+  
+//   useEffect(() => {
+//     const handleCallback = async () => {
+//       try {
+//         // 이전 페이지 URL 가져오기
+//         const previousPath = localStorage.getItem('previousPath') || '/'
+        
+//         const { error } = await supabase.auth.exchangeCodeForSession(window.location.search)
+        
+//         if (error) throw error
+
+//         // 이전 페이지로 리다이렉션
+//         window.location.href = previousPath
+        
+//       } catch (error) {
+//         console.error('인증 콜백 처리 오류:', error)
+//         window.location.href = '/login'
+//       }
+//     }
+
+//     handleCallback()
+//   }, [supabase])
+
+//   return (
+//     <div className="flex min-h-screen items-center justify-center">
+//       <div className="animate-pulse text-center">
+//         <p className="text-lg">로그인 처리 중입니다...</p>
+//       </div>
+//     </div>
+//   )
+// }
+
 // app/auth/callback/page.tsx
 'use client'
 import { useEffect } from 'react'
@@ -105,34 +190,25 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 export default function AuthCallback() {
   const supabase = createClientComponentClient()
+
+useEffect(() => {
+    const hasVerifier = localStorage.getItem('supabase.auth.code_verifier')
+    const hasCode = window.location.search.includes('code=')
   
-  useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        const searchParams = new URLSearchParams(window.location.search)
-        const code = searchParams.get('code')
-        
-        if (!code) {
-          throw new Error('인증 코드가 없습니다')
-        }
-
-        // 세션 교환
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        
-        if (error) {
-          throw error
-        }
-
-        // 세션 교환 후 바로 community로 이동
-        window.location.replace('/community')
-
-      } catch (error) {
-        console.error('인증 콜백 처리 오류:', error)
-        window.location.replace('/login')
-      }
+    if (hasVerifier && hasCode) {
+      supabase.auth.exchangeCodeForSession(window.location.search)
+        .then(({ error }) => {
+          if (error) throw error
+          window.location.href = '/'
+        })
+        .catch((error) => {
+          console.error('인증 실패:', error)
+          window.location.href = '/login'
+        })
+    } else {
+      // 이미 로그인 되었을 가능성 있음 → 바로 홈
+      window.location.href = '/'
     }
-
-    handleCallback()
   }, [supabase])
 
   return (
