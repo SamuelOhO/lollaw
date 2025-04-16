@@ -1,5 +1,5 @@
 // app/board/[slug]/post/[id]/page.tsx
-import { createServerClient } from '@supabase/ssr'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 // import Link from 'next/link'
@@ -15,43 +15,40 @@ export default async function PostDetailPage({ params }: PageProps) {
   const { id } = await params
 
   // 쿠키 세션 처리
-  const cookieStore = await cookies()
-//   const cookieObject = Object.fromEntries(cookieStore.getAll().map(c => [c.name, c.value]))
+//   const cookieStore = await cookies()
+  const supabase = createServerComponentClient({ cookies })
+
 
 //   const supabase = createServerClient(
 //     process.env.NEXT_PUBLIC_SUPABASE_URL!,
 //     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 //     {
 //       cookies: {
-//         get(name) {
-//           return cookieObject[name]
+//         getAll() {
+//           return cookieStore.getAll()
 //         },
-//         set() {},
-//         remove() {}
-//       }
+//         setAll(cookiesToSet) {
+//           try {
+//             cookiesToSet.forEach(({ name, value, options }) =>
+//               cookieStore.set(name, value, options)
+//             )
+//           } catch {
+//             // The `setAll` method was called from a Server Component.
+//             // This can be ignored if you have middleware refreshing
+//             // user sessions.
+//           }
+//         },
+//       },
 //     }
 //   )
+  // const { data: user, error } = await supabase.auth.getUser()
+//   console.log('🧠 서버 유저 확인:', user)
+//   console.log('⚠️ 유저 에러:', error)
 
-const supabase = createServerClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  {
-    cookies: {
-      getAll() {
-        return cookieStore.getAll().map(c => ({
-            name: c.name,
-            value: c.value
-          }))
-      },
-      setAll() {} // 생략 가능
-    }
-  }
-)
-// console.log('📦 서버 쿠키 목록:', cookieStore.getAll())
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-console.log('🧠 서버 세션 확인:', session)
-console.log('⚠️ 세션 에러:', sessionError)
+//   console.log('🧠 서버 쿠키 확인:', cookieStore.getAll())
+  // const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+//   console.log('🧠 서버 세션 확인:', session)
+//   console.log('⚠️ 세션 에러:', sessionError)
 
   // 1. 게시글 가져오기
   const { data: post, error: postError } = await supabase

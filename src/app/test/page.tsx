@@ -1,25 +1,8 @@
 // app/test/page.tsx
 import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
-
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 export default async function TestPage() {
-  const cookieStore = await cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll().map(c => ({
-            name: c.name,
-            value: c.value,
-          }))
-        },
-        setAll() {}, // 생략 가능
-      },
-    }
-  )
+  const supabase = createServerComponentClient({ cookies })
 
   const { data: { session }, error } = await supabase.auth.getSession()
 

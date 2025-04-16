@@ -1,5 +1,5 @@
 // // app/board/[slug]/page.tsx
-import { createServerClient } from '@supabase/ssr'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -13,25 +13,7 @@ interface BoardPageProps {
 export default async function BoardPage({ params }: BoardPageProps) {
   const slug = (await params).slug
   if (!(await params)?.slug) notFound()
-    // 2. cookies()는 동기 함수
-  const cookieStore = await cookies()
-  // 3. 쿠키 객체 만들기
-  const cookieObject = Object.fromEntries(cookieStore.getAll().map(c => [c.name, c.value]))
-
-    //   // 4. Supabase 클라이언트 생성
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-        cookies: {
-            get(name) {
-            return cookieObject[name]
-            },
-            set() {},
-            remove() {}
-        }
-        }
-    )
+    const supabase = createServerComponentClient({ cookies })
 
   try {
     const { data: category, error: categoryError } = await supabase
