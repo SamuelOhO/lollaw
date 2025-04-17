@@ -1,8 +1,9 @@
 // components/CategoryList.tsx
 'use client'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import Link from 'next/link'
+// import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface Category {
   id: number;
@@ -16,6 +17,7 @@ export default function CategoryList({ category }: { category: Category }) {
   const [subCategories, setSubCategories] = useState<Category[]>([])
   const [session, setSession] = useState<any>(null)
   const supabase = createClientComponentClient()
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,9 +41,11 @@ export default function CategoryList({ category }: { category: Category }) {
     if (subCategory.requires_auth && !session) {
       // 현재 경로 저장
       localStorage.setItem('previousPath', `/board/${subCategory.slug}`)
-      window.location.href = '/login'
+      // window.location.href = '/login'
+      router.push('/auth/login')
       return false
     }
+    router.push(`/board/${subCategory.slug}`)
     return true
   }
 
@@ -51,21 +55,21 @@ export default function CategoryList({ category }: { category: Category }) {
       <ul className="space-y-2">
         {subCategories.map((subCategory) => (
           <li key={subCategory.id}>
-            {subCategory.requires_auth && !session ? (
+            {/* {subCategory.requires_auth && !session ? ( */}
               <button
                 onClick={() => handleCategoryClick(subCategory)}
                 className="text-blue-600 hover:text-blue-800"
               >
                 {subCategory.name}
               </button>
-            ) : (
-              <Link
+            {/* ) : ( */}
+              {/* <Link
                 href={`/board/${subCategory.slug}`}
                 className="text-blue-600 hover:text-blue-800"
               >
-                {subCategory.name}
-              </Link>
-            )}
+                // {subCategory.name}
+              // </Link>
+            {/* )} */}
           </li>
         ))}
       </ul>
