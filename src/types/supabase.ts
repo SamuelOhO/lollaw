@@ -8,7 +8,7 @@ export interface Category {
     created_at: string;
   }
   
-  export interface Post {
+export interface Post {
     id: number;
     title: string;
     content: string;
@@ -18,7 +18,7 @@ export interface Category {
     updated_at: string;
   }
   
-  export interface Comment {
+export interface Comment {
     id: number;
     content: string;
     user_id: string;
@@ -27,8 +27,28 @@ export interface Category {
     updated_at: string;
   }
   
-  export interface Profile {
+export interface Profile {
     id: string;
     username: string;
     avatar_url?: string;
   }
+
+  // 학교 인증 관련 타입 정의
+export type VerificationStatus = 'pending' | 'verified' | 'rejected'
+
+export interface SchoolVerification {
+  id: string
+  user_id: string
+  school_id: number
+  verified_at: string
+  verification_method: string
+  status: VerificationStatus
+  email: string
+}
+
+export interface SchoolEmailDomain {
+  id: number
+  school_id: number
+  domain: string
+  created_at: string
+}
