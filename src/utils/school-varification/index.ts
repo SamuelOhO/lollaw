@@ -1,5 +1,5 @@
 import { createServerSupabase } from '@/utils/supabase/server'
-import type { VerificationStatus } from '@/types/supabase'
+import type { VerificationStatus } from '@/app/supabase'
 
 export async function checkSchoolVerification(schoolId: number) {
   const supabase = await createServerSupabase()

@@ -1,65 +1,74 @@
-// // app/board/[slug]/page.tsx
 import { createServerSupabase } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
-import BoardList from '@/components/board/BoardList'
-import WriteButton from '@/components/board/WriteButton'
+import type { BoardPageProps, Category, Post } from '@/types/board'
+import BoardPageContent from './BoardPage'
+import { Suspense } from 'react'
+import BoardSkeleton from '@/components/board/BoardSkeleton'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Database } from '@/app/supabase'
 
-interface BoardPageProps {
-  params: Promise<{ slug: string }>
+// 카테고리 데이터 조회
+async function getCategory(supabase: SupabaseClient<Database>, slug: string) {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('slug', slug)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return data as Category
 }
 
-export default async function BoardPage({ params }: BoardPageProps) {
-  const slug = (await params).slug
-  if (!slug) notFound()
-  
-  const supabase = await createServerSupabase()
+// 게시글 데이터 조회
+async function getPosts(supabase: SupabaseClient<Database>, categoryId: number, page: number = 1, limit: number = 20) {
+  const start = (page - 1) * limit
+  const end = start + limit - 1
 
-  try {
-    // 1. 카테고리 정보 조회
-    const { data: category, error: categoryError } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('slug', slug)
-      .single()
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      profiles:user_id (
+        display_name,
+        avatar_url
+      )
+    `)
+    .eq('category_id', categoryId)
+    .order('created_at', { ascending: false })
+    .range(start, end)
 
-    if (categoryError || !category) {
-      console.error('카테고리 로딩 오류:', categoryError)
-      notFound()
-    }
-
-    const { data: posts } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles:user_id (
-          display_name,
-          avatar_url
-        )
-      `)
-      .eq('category_id', category.id)
-      .order('created_at', { ascending: false })
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">{category.name}</h1>
-        <div className="mb-6 flex justify-end">
-          <WriteButton 
-            isLoggedIn={!!user} 
-            boardSlug={slug}
-          />
-        </div>
-        <BoardList posts={posts || []} />
-      </div>
-    )
-
-  } catch (error) {
-    console.error('페이지 로딩 오류:', error)
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">페이지를 불러오는데 실패했습니다.</p>
-      </div>
-    )
+  if (error) {
+    return []
   }
+
+  return data as Post[]
+}
+
+export default async function Page({ 
+  params: { slug },
+  searchParams 
+}: BoardPageProps) {
+  const page = Number(searchParams.page) || 1
+  const limit = Number(searchParams.limit) || 20
+
+  const supabase = await createServerSupabase()
+  
+  const category = await getCategory(supabase, slug)
+  if (!category) notFound()
+
+  const posts = await getPosts(supabase, category.id, page, limit)
+
+  return (
+    <Suspense fallback={<BoardSkeleton />}>
+      <BoardPageContent 
+        category={category}
+        posts={posts}
+        page={page}
+        limit={limit}
+      />
+    </Suspense>
+  )
 }

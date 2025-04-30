@@ -1,6 +1,6 @@
 // 파일 위치: /src/store/verification.ts
 import { create } from 'zustand'
-import { VerificationStatus } from '@/types/supabase'
+import { VerificationStatus } from '@/app/supabase'
 
 interface VerificationStore {
   status: VerificationStatus | null

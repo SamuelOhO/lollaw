@@ -2,13 +2,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClientSupabase } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import * as React from 'react'
 
 interface WritePageProps {
-  params: {
-    slug: string
-  }
+  params: { slug: string }
 }
 
 export default function WritePage({ params }: WritePageProps) {

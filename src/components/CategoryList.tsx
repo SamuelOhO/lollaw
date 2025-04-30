@@ -4,6 +4,7 @@ import { createClientSupabase } from '@/utils/supabase/client'
 // import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AuthRequiredModal from './auth/AuthRequiredModal'
 
 interface Category {
   id: number;
@@ -16,6 +17,8 @@ interface Category {
 export default function CategoryList({ category }: { category: Category }) {
   const [subCategories, setSubCategories] = useState<Category[]>([])
   const [session, setSession] = useState<any>(null)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const supabase = createClientSupabase()
   const router = useRouter()
 
@@ -38,15 +41,18 @@ export default function CategoryList({ category }: { category: Category }) {
   }, [category.id, supabase])
 
   const handleCategoryClick = (subCategory: Category) => {
-    if (subCategory.requires_auth && !session) {
-      // 현재 경로 저장
-      localStorage.setItem('previousPath', `/board/${subCategory.slug}`)
-      // window.location.href = '/login'
-      router.push('/auth/login')
-      return false
+    // 학교 게시판이고 로그인하지 않은 경우에만 모달 표시
+    if (subCategory.parent_id === 2 && !session) {
+      setSelectedCategory(subCategory)
+      setShowAuthModal(true)
+      return
     }
     router.push(`/board/${subCategory.slug}`)
-    return true
+  }
+
+  const handleModalClose = () => {
+    setShowAuthModal(false)
+    setSelectedCategory(null)
   }
 
   return (
@@ -73,6 +79,13 @@ export default function CategoryList({ category }: { category: Category }) {
           </li>
         ))}
       </ul>
+
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={handleModalClose}
+        message={`${selectedCategory?.name} 게시판을 이용하시려면 로그인과 학교인증이 필요합니다.`}
+        redirectUrl={`/auth/login`}
+      />
     </div>
   )
 }

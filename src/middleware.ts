@@ -3,22 +3,13 @@ import { createServerSupabase } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = await createServerSupabase()
 
   try {
     const pathname = req.nextUrl.pathname
-    
-    // 글쓰기 페이지 체크
-    if (pathname.includes('/write')) {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) {
-        return NextResponse.redirect(new URL('/auth/login', req.url))
-      }
-    }
-
+     
     // 게시판 접근 체크
     const boardMatch = pathname.match(/^\/board\/([^\/]+)/)
     if (boardMatch) {
@@ -41,7 +32,15 @@ export async function middleware(req: NextRequest) {
 
         // 로그인하지 않은 경우
         if (userError || !user) {
-          return NextResponse.redirect(new URL('/auth/login', req.url))
+          const response = NextResponse.json(
+            { 
+              message: "학교게시판을 사용하시려면 로그인과 학교인증이 필요합니다.",
+              boardName: category.name
+            },
+            { status: 401 }
+          )
+          response.headers.set('X-Show-Auth-Modal', 'true')
+          return response
         }
 
         // 학교 인증 체크
@@ -63,8 +62,6 @@ export async function middleware(req: NextRequest) {
           return NextResponse.redirect(new URL(`/unauthorized/${boardSlug}?reason=different_school`, req.url))
         }
       }
-      
-      // 자유게시판(parent_id가 1)인 경우는 접근 제한 없음
     }
 
     // auth 관련 경로는 처리하지 않음

@@ -1,15 +1,29 @@
 // app/layout.tsx
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 import UserMenu from '@/components/UserMenu'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Lollaw',
   description: '로스쿨 커뮤니티',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-icon.png'
+  }
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#ffffff'
 }
 
 export default function RootLayout({
@@ -36,6 +50,8 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

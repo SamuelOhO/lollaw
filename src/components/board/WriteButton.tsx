@@ -1,19 +1,45 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import type { Category } from '@/types/board'
+import { createClientSupabase } from '@/utils/supabase/client'
+import { useState } from 'react'
+import AuthRequiredModal from '../auth/AuthRequiredModal'
 
-interface WriteButtonProps {
-  isLoggedIn: boolean
-  boardSlug: string
+export interface WriteButtonProps {
+  category: Category
 }
 
-export default function WriteButton({ isLoggedIn, boardSlug }: WriteButtonProps) {
+export default function WriteButton({ category }: WriteButtonProps) {
+  const router = useRouter()
+  const [showAuthModal, setShowAuthModal] = useState(false)
+
+  const handleClick = async () => {
+    const supabase = createClientSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+
+    router.push(`/board/${category.slug}/write`)
+  }
+
   return (
-    <Link
-      href={isLoggedIn ? `/board/${boardSlug}/write` : '/auth/login'}
-      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-    >
-      글쓰기
-    </Link>
+    <>
+      <button
+        onClick={handleClick}
+        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      >
+        글쓰기
+      </button>
+
+      <AuthRequiredModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        message="글쓰기는 로그인이 필요합니다."
+      />
+    </>
   )
 } 
