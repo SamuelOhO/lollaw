@@ -1,5 +1,8 @@
 import { createServerSupabase } from '@/utils/supabase/server'
 import { notFound } from 'next/navigation'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import CommentSection from '@/components/comments/CommentSection'
 
 interface PageProps {
   params: {
@@ -8,7 +11,7 @@ interface PageProps {
   }
 }
 
-export default async function PostDetailPage({ params }: PageProps) {
+export default async function PostPage({ params }: PageProps) {
   const { slug, id } = params
   const supabase = await createServerSupabase()
 
@@ -69,41 +72,41 @@ export default async function PostDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+      <article className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
         
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="flex-shrink-0">
-            {post.profiles.avatar_url ? (
+        <div className="flex items-center gap-3 mb-6 text-gray-600">
+          <div className="flex items-center gap-2">
+            {post.profiles.avatar_url && (
               <img
                 src={post.profiles.avatar_url}
-                alt={post.profiles.display_name}
-                className="h-10 w-10 rounded-full"
+                alt="프로필"
+                className="w-8 h-8 rounded-full"
               />
-            ) : (
-              <div className="h-10 w-10 rounded-full bg-gray-200" />
             )}
+            <span>{post.profiles.display_name}</span>
           </div>
-          <div>
-            <div className="font-medium text-gray-900">
-              {post.profiles.display_name}
-            </div>
-            <div className="text-sm text-gray-500">
-              {new Date(post.created_at).toLocaleString('ko-KR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </div>
-          </div>
+          <span>•</span>
+          <time dateTime={post.created_at}>
+            {format(new Date(post.created_at), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
+          </time>
+          {post.updated_at !== post.created_at && (
+            <>
+              <span>•</span>
+              <span className="text-gray-500">
+                수정됨: {format(new Date(post.updated_at), 'yyyy년 M월 d일 HH:mm', { locale: ko })}
+              </span>
+            </>
+          )}
         </div>
 
         <div className="prose max-w-none">
-          <div className="whitespace-pre-wrap text-gray-800">{post.content}</div>
+          {post.content}
         </div>
-      </div>
+      </article>
+
+      {/* 댓글 섹션 */}
+      <CommentSection postId={parseInt(id)} />
     </div>
   )
 } 
