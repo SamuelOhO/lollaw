@@ -52,3 +52,75 @@ export async function GET(request: Request) {
     );
   }
 }
+
+
+export async function POST(request: Request) {
+  try {
+    const { token } = await request.json()
+    const cookieStore = cookies()
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+
+    // 토큰으로 인증 정보 찾기
+    const { data: verification, error: verificationError } = await supabase
+      .from('school_verifications')
+      .select('*, categories:school_id(slug)')
+      .eq('verification_token', token)
+      .single()
+
+    if (verificationError || !verification) {
+      return NextResponse.json(
+        { error: '유효하지 않은 인증 정보입니다.' },
+        { status: 400 }
+      )
+    }
+
+    // 만료 시간 체크 (24시간)
+    const createdAt = new Date(verification.created_at)
+    const now = new Date()
+    if (now.getTime() - createdAt.getTime() > 5 * 60 * 1000) { // 5분으로 수정
+      return NextResponse.json(
+        { error: '만료된 인증 링크입니다.' },
+        { status: 400 }
+      )
+    }
+
+    // 인증 상태 업데이트
+    const { error: updateError } = await supabase
+      .from('school_verifications')
+      .update({
+        status: 'verified',
+        verified_at: new Date().toISOString()
+      })
+      .eq('verification_token', token)
+
+    if (updateError) {
+      throw updateError
+    }
+
+    // 사용자-학교 관계 테이블에 추가
+    const { error: relationError } = await supabase
+      .from('user_schools')
+      .insert({
+        user_id: verification.user_id,
+        school_id: verification.school_id,
+        email: verification.email,
+        status: 'active'
+      })
+
+    if (relationError) {
+      throw relationError
+    }
+
+    return NextResponse.json({ 
+      message: '이메일 인증이 완료되었습니다.',
+      school_slug: verification.categories.slug
+    })
+
+  } catch (error: any) {
+    console.error('인증 처리 에러:', error)
+    return NextResponse.json(
+      { error: '인증 처리 중 오류가 발생했습니다.' },
+      { status: 500 }
+    )
+  }
+}
