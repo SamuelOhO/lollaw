@@ -12,12 +12,19 @@ export default function UnauthorizedPage() {
               해당 학교 게시판에 접근하기 위해서는 학교 이메일 인증이 필요합니다.
             </p>
           </div>
-          <div className="mt-5">
-            <Link href="/">
-              <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                메인페이지로 돌아가기
+          <div className="mt-5 space-y-4">
+            <Link href="/auth/verify-email">
+              <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                학교 이메일 인증하기
               </div>
             </Link>
+            <div>
+              <Link href="/">
+                <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  메인페이지로 돌아가기
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
