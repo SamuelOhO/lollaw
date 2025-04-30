@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function UnauthorizedPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -11,12 +13,11 @@ export default function UnauthorizedPage() {
             </p>
           </div>
           <div className="mt-5">
-            <a
-              href="/"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              메인페이지로 돌아가기
-            </a>
+            <Link href="/">
+              <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                메인페이지로 돌아가기
+              </div>
+            </Link>
           </div>
         </div>
       </div>
