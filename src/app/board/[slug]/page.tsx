@@ -66,6 +66,7 @@ export default async function BoardPage({ params }: BoardPageProps) {
 
       if (!verification) {
         // unauthorized 페이지로 리다이렉트하면서 slug 전달
+        console.log('unauthorized 페이지로 리다이렉트',slug)
         return redirect(`/unauthorized/${slug}`)
       }
     }

@@ -39,7 +39,7 @@ export async function middleware(req: NextRequest) {
 
     if (error || !verification || verification.school.slug !== schoolSlug) {
       // 인증되지 않은 학교의 게시판 접근 시도
-      return NextResponse.redirect(new URL('/unauthorized', req.url))
+      return NextResponse.redirect(new URL(`/unauthorized/${schoolSlug}`, req.url))
     }
   }
 
