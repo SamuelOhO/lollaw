@@ -43,6 +43,8 @@ export default function CategoryList({ category }: { category: Category }) {
   const handleCategoryClick = (subCategory: Category) => {
     // 학교 게시판이고 로그인하지 않은 경우에만 모달 표시
     if (subCategory.parent_id === 2 && !session) {
+      // 의도된 경로 저장
+      localStorage.setItem('intendedPath', `/board/${subCategory.slug}`)
       setSelectedCategory(subCategory)
       setShowAuthModal(true)
       return

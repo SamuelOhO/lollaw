@@ -1,11 +1,28 @@
 'use client'
 
 import { createClientSupabase } from '@/utils/supabase/client'
-// import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
-  // const router = useRouter()
+  const router = useRouter()
   const supabase = createClientSupabase()
+
+  // 로그인 상태 확인 및 리다이렉트 처리
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        // localStorage에서 의도된 경로 가져오기
+        const intendedPath = localStorage.getItem('intendedPath')
+        // 의도된 경로가 있으면 해당 경로로, 없으면 홈으로 리다이렉트
+        router.push(intendedPath || '/')
+        // 사용한 의도된 경로는 삭제
+        localStorage.removeItem('intendedPath')
+      }
+    }
+    checkAuth()
+  }, [router, supabase])
 
   const handleGoogleLogin = async () => {
     try {

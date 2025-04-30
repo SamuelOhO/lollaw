@@ -19,6 +19,7 @@ export default function WriteButton({ category }: WriteButtonProps) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
+      localStorage.setItem('intendedPath', `/board/${category.slug}/write`)
       setShowAuthModal(true)
       return
     }

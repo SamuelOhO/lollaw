@@ -39,7 +39,7 @@ export default async function UnauthorizedPage({
               {category?.name} 게시판을 이용하기 위해서는 학교 인증이 필요합니다.
             </p>
             <Link 
-              href="/mypage"
+              href={`/auth/verify-school/${params.slug}`}
               className="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
             >
               학교 인증하러 가기
