@@ -107,9 +107,8 @@
 // }
 
 // components/PostList.tsx
-
 'use client'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientSupabase } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { formatKoreanDateTime } from '@/utils/date'
@@ -121,11 +120,10 @@ interface PostListProps {
 }
 
 export default function PostList({ categoryId, requiresAuth, slug }: PostListProps) {
-
     const [posts, setPosts] = useState<any[]>([])
     const [session, setSession] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    const supabase = createClientComponentClient()
+    const supabase = createClientSupabase()
 
     useEffect(() => {
         const fetchData = async () => {

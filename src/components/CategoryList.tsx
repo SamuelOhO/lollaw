@@ -1,6 +1,6 @@
 // components/CategoryList.tsx
 'use client'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientSupabase } from '@/utils/supabase/client'
 // import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -16,7 +16,7 @@ interface Category {
 export default function CategoryList({ category }: { category: Category }) {
   const [subCategories, setSubCategories] = useState<Category[]>([])
   const [session, setSession] = useState<any>(null)
-  const supabase = createClientComponentClient()
+  const supabase = createClientSupabase()
   const router = useRouter()
 
   useEffect(() => {

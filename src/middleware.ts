@@ -1,56 +1,83 @@
-// // middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+// middleware.ts
+import { createServerSupabase } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  const supabase = await createServerSupabase()
 
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const pathname = req.nextUrl.pathname
     
-    // URL에서 학교 슬러그 추출
-  const pathname = req.nextUrl.pathname
-  const boardMatch = pathname.match(/^\/board\/([^\/]+)/)
-  
-  if (boardMatch) {
-    const schoolSlug = boardMatch[1]
-
-    if (!session) {
-      // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-      return NextResponse.redirect(new URL('/auth/login', req.url))
+    // 글쓰기 페이지 체크
+    if (pathname.includes('/write')) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        return NextResponse.redirect(new URL('/auth/login', req.url))
+      }
     }
 
-    // 사용자의 학교 인증 정보 확인
-    const { data: verification, error } = await supabase
-    .from('school_verifications')
-    .select(`
-      *,
-      school:school_id (
-        slug
-      )
-    `)
-    .eq('user_id', session.user.id)
-    .eq('status', 'verified')
-    .single()
+    // 게시판 접근 체크
+    const boardMatch = pathname.match(/^\/board\/([^\/]+)/)
+    if (boardMatch) {
+      const boardSlug = boardMatch[1]
 
-    if (error || !verification || verification.school.slug !== schoolSlug) {
-      // 인증되지 않은 학교의 게시판 접근 시도
-      return NextResponse.redirect(new URL(`/unauthorized/${schoolSlug}`, req.url))
+      // 카테고리 정보 조회
+      const { data: category, error: categoryError } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('slug', boardSlug)
+        .single()
+
+      if (categoryError || !category) {
+        return NextResponse.redirect(new URL('/404', req.url))
+      }
+
+      // 학교 게시판인 경우 (parent_id가 2)
+      if (category.parent_id === 2) {
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+        // 로그인하지 않은 경우
+        if (userError || !user) {
+          return NextResponse.redirect(new URL('/auth/login', req.url))
+        }
+
+        // 학교 인증 체크
+        const { data: verifications, error: verificationError } = await supabase
+          .from('school_verifications')
+          .select('school_id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'verified')
+          .not('verified_at', 'is', null)
+
+        // 학교 인증이 없는 경우
+        if (verificationError || !verifications || verifications.length === 0) {
+          return NextResponse.redirect(new URL(`/unauthorized/${boardSlug}`, req.url))
+        }
+
+        // 다른 학교 인증된 경우
+        const verifiedSchool = verifications[0]
+        if (verifiedSchool.school_id !== category.id) {
+          return NextResponse.redirect(new URL(`/unauthorized/${boardSlug}?reason=different_school`, req.url))
+        }
+      }
+      
+      // 자유게시판(parent_id가 1)인 경우는 접근 제한 없음
     }
-  }
 
     // auth 관련 경로는 처리하지 않음
-    if (req.nextUrl.pathname.startsWith('auth') || req.nextUrl.pathname.startsWith('api/auth')) {
+    if (req.nextUrl.pathname.startsWith('/auth') || req.nextUrl.pathname.startsWith('/api/auth')) {
       return res
     }
 
     // 로그인된 상태에서 로그인 페이지 접근 시 홈으로 리다이렉트
-    if (req.nextUrl.pathname === 'auth/login' && session) {
-      return NextResponse.redirect(new URL('/', req.url))
+    if (req.nextUrl.pathname === '/auth/login') {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        return NextResponse.redirect(new URL('/', req.url))
+      }
     }
 
     return res
@@ -65,10 +92,10 @@ export async function middleware(req: NextRequest) {
 // }
 
 export const config = {
-    matcher: [
-    '/community/:path*',
+  matcher: [
     '/board/:path*',
+    '/board/:slug/write',
     '/auth/login',
     '/api/auth/callback/:path*'
-    ]
+  ]
 }

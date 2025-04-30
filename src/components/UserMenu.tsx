@@ -1,6 +1,6 @@
 // components/UserMenu.tsx
 'use client'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientSupabase } from '@/utils/supabase/client'
 import { useEffect, useState } from 'react'
 
 interface UserProfile {
@@ -10,7 +10,7 @@ interface UserProfile {
 export default function UserMenu() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const supabase = createClientSupabase()
   const [, setSession] = useState<any>(null)
 
   useEffect(() => {

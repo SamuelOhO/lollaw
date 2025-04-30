@@ -1,12 +1,12 @@
 // // src/app/page.tsx
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerSupabase } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import CategoryList from '@/components/CategoryList'
 
 export default async function Home() {
   // 비동기 함수로 분리하여 실행
   async function getData() {
-    const supabase = createServerComponentClient({ cookies })
+    const supabase = await createServerSupabase()
     
     const { data } = await supabase
       .from('categories')

@@ -1,9 +1,9 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerSupabase } from '@/utils/supabase/server'
 import type { VerificationStatus } from '@/types/supabase'
 
 export async function checkSchoolVerification(schoolId: number) {
-  const supabase = createClientComponentClient()
-  
+  const supabase = await createServerSupabase()
+
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return false
@@ -24,8 +24,8 @@ export async function checkSchoolVerification(schoolId: number) {
 }
 
 export async function getVerificationStatus(schoolId: number): Promise<VerificationStatus | null> {
-  const supabase = createClientComponentClient()
-  
+  const supabase = await createServerSupabase()
+
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return null

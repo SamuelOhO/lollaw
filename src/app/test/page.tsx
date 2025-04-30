@@ -1,9 +1,8 @@
 // app/test/page.tsx
-import { cookies } from 'next/headers'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-export default async function TestPage() {
-  const supabase = createServerComponentClient({ cookies })
+import { createServerSupabase } from '@/utils/supabase/server'
 
+export default async function TestPage() {
+  const supabase = await createServerSupabase()
   const { data: { session }, error } = await supabase.auth.getSession()
 
   return (

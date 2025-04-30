@@ -1,22 +1,24 @@
 // app/board/[slug]/write/page.tsx
 'use client'
 import { useState, useEffect } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientSupabase } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import * as React from 'react'
 
 interface WritePageProps {
-  params: Promise<{ slug: string }>
+  params: {
+    slug: string
+  }
 }
 
 export default function WritePage({ params }: WritePageProps) {
   const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClientSupabase()
   const [title, setTitle] = useState<string>('')
   const [content, setContent] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [category, setCategory] = useState<any>(null)
-  const { slug } = React.use(params)
+  const { slug } = params
   
 
   useEffect(() => {

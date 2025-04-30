@@ -1,38 +1,51 @@
+import { createServerSupabase } from '@/utils/supabase/server'
 import Link from 'next/link'
-import * as React from 'react'
 
-interface PageProps {
-  params: Promise<{ slug: string }>
-}
-
-export default function UnauthorizedPage({ params }: PageProps) {
-  const { slug } = React.use(params)
+export default async function UnauthorizedPage({ 
+  params,
+  searchParams 
+}: { 
+  params: { slug: string }
+  searchParams: { reason?: string }
+}) {
+  const supabase = await createServerSupabase()
+  
+  const { data: category } = await supabase
+    .from('categories')
+    .select('name')
+    .eq('slug', params.slug)
+    .single()
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 text-center">
-        <div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            접근 권한이 없습니다
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            해당 학교 게시판에 접근하기 위해서는 학교 이메일 인증이 필요합니다.
-          </p>
-        </div>
-        <div className="mt-5 space-y-4">
-          <Link href={`/auth/verify-school/${slug}`}>
-            <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-              학교 이메일 인증하기
-            </div>
-          </Link>
-          <div>
-            <Link href="/">
-              <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                메인페이지로 돌아가기
-              </div>
+    <div className="min-h-[400px] flex items-center justify-center">
+      <div className="text-center max-w-md">
+        <h1 className="text-3xl font-bold mb-4">접근 제한</h1>
+        {searchParams.reason === 'different_school' ? (
+          <>
+            <p className="text-gray-600 mb-6">
+              다른 학교로 인증이 완료되어 있어 {category?.name} 게시판에 접근할 수 없습니다.
+              한 번에 하나의 학교 게시판만 이용할 수 있습니다.
+            </p>
+            <Link 
+              href="/mypage"
+              className="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              마이페이지에서 학교 인증 관리하기
             </Link>
-          </div>
-        </div>
+          </>
+        ) : (
+          <>
+            <p className="text-gray-600 mb-6">
+              {category?.name} 게시판을 이용하기 위해서는 학교 인증이 필요합니다.
+            </p>
+            <Link 
+              href="/mypage"
+              className="inline-block bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              학교 인증하러 가기
+            </Link>
+          </>
+        )}
       </div>
     </div>
   )

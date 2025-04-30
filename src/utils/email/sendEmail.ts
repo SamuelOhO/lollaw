@@ -80,8 +80,7 @@ async function verifyEmailConnection() {
 //     throw error
 //   }
 // }
-export async function sendVerificationEmail(email: string, schoolName: string, verificationToken: string) {
-  // 이메일 서버 연결 확인
+export async function sendVerificationEmail(email: string, schoolName: string, verificationCode: string) {
   const isConnected = await verifyEmailConnection()
   if (!isConnected) {
     return { 
@@ -90,16 +89,13 @@ export async function sendVerificationEmail(email: string, schoolName: string, v
     }
   }
 
-  // 인증 URL 생성
-  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`
-
   const mailOptions = {
     from: {
-      name: 'LolLaw 인증센터',  // 보내는 사람 이름을 더 공식적으로 변경
+      name: 'LolLaw 인증센터',
       address: process.env.EMAIL_USER as string
     },
     to: email,
-    subject: `[${schoolName}] 학교 이메일 인증`,
+    subject: `[${schoolName}] 학교 이메일 인증 코드`,
     html: `
       <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px;">
@@ -107,23 +103,15 @@ export async function sendVerificationEmail(email: string, schoolName: string, v
           <p style="color: #666;">안녕하세요,</p>
           <p style="color: #666;">${schoolName} 이메일 인증을 진행합니다.</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
-               style="display: inline-block; 
-                      background-color: #4CAF50; 
-                      color: white; 
-                      padding: 14px 28px; 
-                      text-decoration: none; 
-                      border-radius: 4px;
-                      font-weight: bold;">
-              이메일 인증하기
-            </a>
+            <div style="background-color: #eee; padding: 20px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 4px;">
+              ${verificationCode}
+            </div>
           </div>
-          <p style="color: #666; margin-top: 20px;">버튼이 작동하지 않는 경우, 아래 링크를 복사하여 브라우저에 붙여넣어 주세요:</p>
-          <p style="background-color: #eee; padding: 10px; border-radius: 4px; word-break: break-all;">
-            ${verificationUrl}
+          <p style="color: #666; margin-top: 20px;">
+            위 인증 코드를 복사하여 인증 페이지에 입력해주세요.
           </p>
           <p style="color: #999; font-size: 14px; margin-top: 30px;">
-            • 이 링크는 24시간 동안 유효합니다.<br>
+            • 이 인증 코드는 5분간 유효합니다.<br>
             • 본 이메일은 발신전용입니다.<br>
             • 인증 요청을 하지 않았다면 이 이메일을 무시하셔도 됩니다.
           </p>
@@ -133,17 +121,15 @@ export async function sendVerificationEmail(email: string, schoolName: string, v
         </div>
       </div>
     `,
-    // 텍스트 버전도 추가
     text: `
-      ${schoolName} 이메일 인증
+      ${schoolName} 이메일 인증 코드
       
       안녕하세요,
       ${schoolName} 이메일 인증을 진행합니다.
       
-      아래 링크를 통해 이메일 인증을 완료해주세요:
-      ${verificationUrl}
+      인증 코드: ${verificationCode}
       
-      이 링크는 24시간 동안 유효합니다.
+      이 인증 코드는 5분간 유효합니다.
       
       © ${new Date().getFullYear()} LolLaw
     `
@@ -151,7 +137,7 @@ export async function sendVerificationEmail(email: string, schoolName: string, v
 
   try {
     await transporter.sendMail(mailOptions)
-    return { success: true, verificationToken }
+    return { success: true }
   } catch (error) {
     console.error('이메일 전송 에러:', error)
     return { 

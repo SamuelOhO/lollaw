@@ -1,10 +1,10 @@
 // components/LoginButton.tsx
 'use client'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientSupabase } from '@/utils/supabase/client'
 import { usePathname } from 'next/navigation'
 
 export default function LoginButton() {
-  const supabase = createClientComponentClient()
+  const supabase = createClientSupabase()
   const pathname = usePathname()
 
   const handleLogin = async () => {

@@ -1,11 +1,11 @@
 'use client'
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClientSupabase } from '@/utils/supabase/client'
 // import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   // const router = useRouter()
-  const supabase = createClientComponentClient()
+  const supabase = createClientSupabase()
 
   const handleGoogleLogin = async () => {
     try {
