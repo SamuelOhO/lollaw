@@ -6,9 +6,16 @@ export interface Post {
   updated_at: string
   category_id: number
   user_id: string
+  views: number
   profiles: {
     display_name: string
     avatar_url: string | null
+  }
+  comments: {
+    count: number
+  }
+  likes: {
+    count: number
   }
 }
 

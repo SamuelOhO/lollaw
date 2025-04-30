@@ -36,9 +36,79 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const supabase = createClientSupabase()
 
+  const fetchComments = async () => {
+    const { data: commentsData, error: commentsError } = await supabase
+      .from('comments')
+      .select(`
+        id,
+        content,
+        created_at,
+        updated_at,
+        user_id,
+        post_id,
+        parent_id
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
+
+    if (commentsError) {
+      console.error('댓글을 불러오는 중 오류가 발생했습니다:', commentsError)
+      return
+    }
+
+    if (!commentsData || commentsData.length === 0) {
+      setComments([])
+      return
+    }
+
+    const userIds = [...new Set(commentsData.map(comment => comment.user_id))]
+    
+    if (userIds.length === 0) {
+      setComments([])
+      return
+    }
+
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, display_name, avatar_url')
+      .in('id', userIds)
+
+    if (profilesError) {
+      console.error('프로필 정보를 불러오는 중 오류가 발생했습니다:', profilesError)
+      return
+    }
+
+    const commentsWithProfiles = commentsData.map(comment => ({
+      ...comment,
+      profiles: profilesData?.find(profile => profile.id === comment.user_id) || {
+        display_name: '알 수 없음',
+        avatar_url: null
+      }
+    }))
+
+    const organizedComments = organizeComments(commentsWithProfiles)
+    setComments(organizedComments)
+  }
+
   useEffect(() => {
-    fetchComments()
-    checkUser()
+    let isMounted = true
+
+    const initialize = async () => {
+      try {
+        const [userResult] = await Promise.all([
+          supabase.auth.getUser(),
+          fetchComments()
+        ])
+        
+        if (isMounted) {
+          setUser(userResult.data.user)
+        }
+      } catch (error) {
+        console.error('초기화 중 오류 발생:', error)
+      }
+    }
+
+    initialize()
 
     // 실시간 구독 설정
     const channel = supabase
@@ -52,20 +122,18 @@ export default function CommentSection({ postId }: CommentSectionProps) {
           filter: `post_id=eq.${postId}`
         },
         () => {
-          fetchComments()
+          if (isMounted) {
+            fetchComments()
+          }
         }
       )
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      isMounted = false
+      channel.unsubscribe()
     }
   }, [postId])
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
-  }
 
   const organizeComments = (flatComments: Comment[]): Comment[] => {
     // 최상위 댓글과 대댓글을 분리
@@ -96,50 +164,6 @@ export default function CommentSection({ postId }: CommentSectionProps) {
     return parentComments.sort((a, b) => 
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     )
-  }
-
-  const fetchComments = async () => {
-    console.log('Fetching comments for post ID:', postId, typeof postId)
-    
-    const { data: commentsData, error: commentsError } = await supabase
-      .from('comments')
-      .select('*')
-      .eq('post_id', postId)
-      .order('created_at', { ascending: true })
-
-    if (commentsError) {
-      console.error('댓글을 불러오는 중 오류가 발생했습니다:', commentsError)
-      return
-    }
-
-    if (!commentsData?.length) {
-      setComments([])
-      return
-    }
-
-    const userIds = [...new Set(commentsData.map(comment => comment.user_id))]
-    const { data: profilesData, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, display_name, avatar_url')
-      .in('id', userIds)
-
-    if (profilesError) {
-      console.error('프로필 정보를 불러오는 중 오류가 발생했습니다:', profilesError)
-      return
-    }
-
-    const commentsWithProfiles = commentsData.map(comment => ({
-      ...comment,
-      profiles: profilesData?.find(profile => profile.id === comment.user_id) || {
-        display_name: '알 수 없음',
-        avatar_url: null
-      }
-    }))
-
-    // 댓글을 계층 구조로 정리
-    const organizedComments = organizeComments(commentsWithProfiles)
-    console.log('Organized comments:', organizedComments)
-    setComments(organizedComments)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
