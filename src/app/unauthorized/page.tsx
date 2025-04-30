@@ -1,6 +1,13 @@
+'use client'
+
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 export default function UnauthorizedPage() {
+    // URL에서 slug 파라미터를 가져옵니다
+    const searchParams = useSearchParams()
+    const slug = searchParams.get('slug')
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8 text-center">
@@ -13,7 +20,7 @@ export default function UnauthorizedPage() {
             </p>
           </div>
           <div className="mt-5 space-y-4">
-            <Link href="/auth/verify-email">
+            <Link href={`/auth/verify-school/${slug || ''}`}>
               <div className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
                 학교 이메일 인증하기
               </div>
