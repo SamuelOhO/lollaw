@@ -65,10 +65,8 @@ export default async function BoardPage({ params }: BoardPageProps) {
         .single()
 
       if (!verification) {
-         // 학교 인증 페이지로 리다이렉트
-        // return redirect(`/auth/verify-school/${slug}`)
-        return redirect(`/auth/verify-school/${slug}`)
-
+        // unauthorized 페이지로 리다이렉트하면서 slug 전달
+        return redirect(`/unauthorized/${slug}`)
       }
     }
 
