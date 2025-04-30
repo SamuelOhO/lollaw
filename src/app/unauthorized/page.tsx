@@ -1,12 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+// import { useSearchParams } from 'next/navigation'
+import * as React from 'react'
 
-export default function UnauthorizedPage() {
+interface PageProps {
+    params: Promise<{ slug: string }>
+  }
+  
+export default function UnauthorizedPage({ params }: PageProps) {
     // URL에서 slug 파라미터를 가져옵니다
-    const searchParams = useSearchParams()
-    const slug = searchParams.get('slug')
+    const { slug } = React.use(params)
 
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
