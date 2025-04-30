@@ -12,26 +12,7 @@ export async function GET(request: Request) {
       // const cookieStore = await cookies()
       
       // 쿠키 스토어를 직접 처리
-      const supabase = createRouteHandlerClient({ 
-        // cookies: () => ({
-        //   get(name: string) {
-        //     return cookieStore.get(name)
-        //   },
-        //   set(name: string, value: string, options: any) {
-        //     try {
-        //       cookieStore.set(name, value, options)
-        //     } catch (error) {
-        //       console.error('쿠키 설정 에러:', error)
-        //     }
-        //   },
-        //   remove(name: string, options: any) {
-        //     try {
-        //       cookieStore.set(name, '', { ...options, maxAge: 0 })
-        //     } catch (error) {
-        //       console.error('쿠키 삭제 에러:', error)
-        //     }
-        //   }
-        // })
+      const supabase = createRouteHandlerClient({
         cookies
       })
 

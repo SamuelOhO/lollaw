@@ -161,7 +161,7 @@ export default function PostList({ categoryId, requiresAuth, slug }: PostListPro
   const handleWriteClick = () => {
     if (!session) {
       localStorage.setItem('previousPath', `/board/${slug}`)
-      window.location.href = '/login'
+      window.location.href = '/auth/login'
       return
     }
     window.location.href = `/board/${slug}/write`

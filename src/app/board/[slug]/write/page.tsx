@@ -40,7 +40,7 @@ export default function WritePage({ params }: WritePageProps) {
       // 권한 체크
       const { data: { session } } = await supabase.auth.getSession()
       if (category.requires_auth && !session) {
-        router.push('/login')
+        router.push('/auth/login')
       }
     }
 
@@ -55,7 +55,7 @@ export default function WritePage({ params }: WritePageProps) {
       
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        router.push('/login')
+        router.push('/auth/login')
         return
       }
 

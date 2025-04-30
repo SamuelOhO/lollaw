@@ -11,12 +11,17 @@ interface BoardPageProps {
 }
 
 export default async function BoardPage({ params }: BoardPageProps) {
+  
   const slug = (await params).slug
   if (!slug) notFound()
-  const supabase = createServerComponentClient({ cookies })
+
+  // cookies를 await로 처리
+  const cookieStore = cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
   
 
   try {
+    // 1. 카테고리 정보 조회
     const { data: category, error: categoryError } = await supabase
       .from('categories')
       .select('*')
@@ -31,29 +36,43 @@ export default async function BoardPage({ params }: BoardPageProps) {
     // const { data: { session } } = await supabase.auth.getSession()
 
 
-    // 학교 게시판(parent_id가 2)이고 인증이 필요한 경우
+    // 2. 학교 게시판(parent_id가 2)이고 인증이 필요한 경우
     if (category.parent_id === 2 && category.requires_auth) {
-      const { data: { session } } = await supabase.auth.getSession()
+      // const { data: { session } } = await supabase.auth.getSession()
       
-      if (!session) {
-        return redirect('/auth/login')
+      // // 2-1. 로그인 체크
+      // if (!session) {
+      //   // 로그인 페이지로 리다이렉트 시 현재 URL을 state로 전달
+      //   return redirect('/auth/login')
+      // }
+
+      // getUser()로 변경
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (!user || userError) {
+        return redirect(`/auth/login?redirect=/board/${slug}`)
       }
 
-      // 학교 인증 확인
+      // 2-2. 학교 인증 확인
+      // const { data: verification } = await supabase
       const { data: verification } = await supabase
         .from('school_verifications')
         .select('*')
         .eq('school_id', category.id)
-        .eq('user_id', session.user.id)
+        // .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('status', 'verified')
         .single()
 
       if (!verification) {
-        // 인증 페이지는 새로 만들어야 함
+         // 학교 인증 페이지로 리다이렉트
+        // return redirect(`/auth/verify-school/${slug}`)
         return redirect(`/auth/verify-school/${slug}`)
+
       }
     }
 
+    // 3. 게시판 표시
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
@@ -69,7 +88,12 @@ export default async function BoardPage({ params }: BoardPageProps) {
         />
       </div>
     )
-  } catch (error) {
+  } catch (error: any) {
+    // 리다이렉트 에러는 무시
+    if (error?.message === 'NEXT_REDIRECT') {
+      throw error
+    }
+
     console.error('페이지 로딩 오류:', error)
     return (
       <div className="text-center py-8">
