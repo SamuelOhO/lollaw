@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type { Category } from '@/types/board'
-import { createClientSupabase } from '@/utils/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { useState } from 'react'
 import AuthRequiredModal from '../auth/AuthRequiredModal'
 
@@ -15,7 +15,7 @@ export default function WriteButton({ category }: WriteButtonProps) {
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const handleClick = async () => {
-    const supabase = createClientSupabase()
+    const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {

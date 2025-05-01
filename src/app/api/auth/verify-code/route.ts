@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabase } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { hashVerificationCode } from '@/utils/auth/verification-code'
 
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = await createServerSupabase()
+    const supabase = await createClient()
 
     // 사용자 정보 확인
     const { data: { user }, error: userError } = await supabase.auth.getUser()

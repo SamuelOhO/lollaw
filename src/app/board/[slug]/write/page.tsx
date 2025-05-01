@@ -1,7 +1,7 @@
 // app/board/[slug]/write/page.tsx
 'use client'
 import { useState, useEffect } from 'react'
-import { createClientSupabase } from '@/utils/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import * as React from 'react'
 
@@ -11,7 +11,7 @@ interface WritePageProps {
 
 export default function WritePage({ params }: WritePageProps) {
   const router = useRouter()
-  const supabase = createClientSupabase()
+  const supabase = createClient()
   const [title, setTitle] = useState<string>('')
   const [content, setContent] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)

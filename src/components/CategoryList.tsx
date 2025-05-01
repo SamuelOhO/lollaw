@@ -1,7 +1,7 @@
 // components/CategoryList.tsx
 'use client'
-import { createClientSupabase } from '@/utils/supabase/client'
-// import Link from 'next/link'
+import { createClient } from '@/utils/supabase/client'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AuthRequiredModal from './auth/AuthRequiredModal'
@@ -14,42 +14,35 @@ interface Category {
   parent_id: number | null;
 }
 
-export default function CategoryList({ category }: { category: Category }) {
-  const [subCategories, setSubCategories] = useState<Category[]>([])
+interface CategoryListProps {
+  categories: Category[];
+}
+
+export default function CategoryList({ categories }: CategoryListProps) {
   const [session, setSession] = useState<any>(null)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
-  const supabase = createClientSupabase()
+  const supabase = createClient()
   const router = useRouter()
 
   useEffect(() => {
-    const fetchData = async () => {
-      // 세션 확인
+    const fetchSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
-
-      // 서브카테고리 가져오기
-      const { data: subCategories } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('parent_id', category.id)
-
-      if (subCategories) setSubCategories(subCategories)
     }
 
-    fetchData()
-  }, [category.id, supabase])
+    fetchSession()
+  }, [supabase])
 
-  const handleCategoryClick = (subCategory: Category) => {
+  const handleCategoryClick = (category: Category) => {
     // 학교 게시판이고 로그인하지 않은 경우에만 모달 표시
-    if (subCategory.parent_id === 2 && !session) {
-      // 의도된 경로 저장
-      localStorage.setItem('intendedPath', `/board/${subCategory.slug}`)
-      setSelectedCategory(subCategory)
+    if (category.parent_id === 2 && !session) {
+      localStorage.setItem('intendedPath', `/board/${category.slug}`)
+      setSelectedCategory(category)
       setShowAuthModal(true)
       return
     }
-    router.push(`/board/${subCategory.slug}`)
+    router.push(`/board/${category.slug}`)
   }
 
   const handleModalClose = () => {
@@ -57,36 +50,61 @@ export default function CategoryList({ category }: { category: Category }) {
     setSelectedCategory(null)
   }
 
+  // 카테고리를 부모 ID별로 그룹화
+  const groupedCategories = categories.reduce((acc, category) => {
+    const parentId = category.parent_id || 'root'
+    if (!acc[parentId]) {
+      acc[parentId] = []
+    }
+    acc[parentId].push(category)
+    return acc
+  }, {} as Record<string | number, Category[]>)
+
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">{category.name}</h2>
-      <ul className="space-y-2">
-        {subCategories.map((subCategory) => (
-          <li key={subCategory.id}>
-            {/* {subCategory.requires_auth && !session ? ( */}
-              <button
-                onClick={() => handleCategoryClick(subCategory)}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                {subCategory.name}
-              </button>
-            {/* ) : ( */}
-              {/* <Link
-                href={`/board/${subCategory.slug}`}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                // {subCategory.name}
-              // </Link>
-            {/* )} */}
-          </li>
-        ))}
-      </ul>
+    <div>
+      {/* 자유게시판 섹션 */}
+      {groupedCategories[1] && (
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4">자유게시판</h2>
+          <ul className="space-y-2">
+            {groupedCategories[1].map((category) => (
+              <li key={category.id}>
+                <button
+                  onClick={() => handleCategoryClick(category)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {category.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 학교게시판 섹션 */}
+      {groupedCategories[2] && (
+        <div>
+          <h2 className="text-xl font-bold mb-4">학교게시판</h2>
+          <ul className="space-y-2">
+            {groupedCategories[2].map((category) => (
+              <li key={category.id}>
+                <button
+                  onClick={() => handleCategoryClick(category)}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  {category.name}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <AuthRequiredModal
         isOpen={showAuthModal}
         onClose={handleModalClose}
         message={`${selectedCategory?.name} 게시판을 이용하시려면 로그인과 학교인증이 필요합니다.`}
-        redirectUrl={`/auth/login`}
+        redirectUrl="/auth/login"
       />
     </div>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClientSupabase } from '@/utils/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import { useDebouncedCallback } from 'use-debounce'
 import type { Post, Category } from '@/types/board'
 import Link from 'next/link'
@@ -20,7 +20,7 @@ export default function BoardList({ initialPosts, category }: BoardListProps) {
   const [isSearching, setIsSearching] = useState(false)
   const router = useRouter()
 
-  const supabase = createClientSupabase()
+  const supabase = createClient()
 
   // 실시간 업데이트 설정
   useEffect(() => {
@@ -61,18 +61,40 @@ export default function BoardList({ initialPosts, category }: BoardListProps) {
     const { data, error } = await supabase
       .from('posts')
       .select(`
-        *,
+        id,
+        title,
+        content,
+        created_at,
+        updated_at,
+        views,
+        user_id,
+        category_id,
         profiles:user_id (
           display_name,
           avatar_url
-        )
+        ),
+        comments:comments(count),
+        likes:likes(count)
       `)
       .eq('category_id', category.id)
       .or(`title.ilike.%${term}%,content.ilike.%${term}%`)
       .order('created_at', { ascending: false })
 
     if (!error && data) {
-      setPosts(data)
+      const formattedPosts = data.map(post => ({
+        ...post,
+        profiles: {
+          display_name: post.profiles?.[0]?.display_name ?? null,
+          avatar_url: post.profiles?.[0]?.avatar_url ?? null
+        },
+        comments: {
+          count: post.comments?.[0]?.count ?? 0
+        },
+        likes: {
+          count: post.likes?.[0]?.count ?? 0
+        }
+      }));
+      setPosts(formattedPosts as Post[]);
     }
     setIsSearching(false)
   }, 300)
@@ -119,7 +141,7 @@ export default function BoardList({ initialPosts, category }: BoardListProps) {
                 {post.profiles.avatar_url ? (
                   <img
                     src={post.profiles.avatar_url}
-                    alt={post.profiles.display_name}
+                    alt={post.profiles.display_name || '사용자 프로필'}
                     className="h-10 w-10 rounded-full"
                   />
                 ) : (
@@ -128,12 +150,19 @@ export default function BoardList({ initialPosts, category }: BoardListProps) {
               </div>
               <div>
                 <div className="font-medium text-gray-900">
-                  {post.profiles.display_name}
+                  {post.profiles.display_name || '익명'}
                 </div>
                 <div className="text-sm text-gray-500">
-                    {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: ko })}
-                    /
-                    {new Date(post.created_at).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  {formatDistanceToNow(new Date(post.created_at || new Date()), { addSuffix: true, locale: ko })}
+                  {' / '}
+                  {new Date(post.created_at || new Date()).toLocaleString('ko-KR', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                  })}
                 </div>
               </div>
             </div>

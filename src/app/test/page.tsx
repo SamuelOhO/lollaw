@@ -1,17 +1,16 @@
 // app/test/page.tsx
-import { createServerSupabase } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server'
 
 export default async function TestPage() {
-  const supabase = await createServerSupabase()
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
 
   return (
-    <div className="p-8">
-      <h1 className="text-xl font-bold mb-4">🔍 SSR 세션 테스트</h1>
-      <p><strong>세션:</strong></p>
-      <pre className="bg-gray-100 p-4 rounded">{JSON.stringify(session, null, 2)}</pre>
-      <p><strong>에러:</strong></p>
-      <pre className="bg-red-100 p-4 rounded">{JSON.stringify(error, null, 2)}</pre>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">테스트 페이지</h1>
+      <pre className="bg-gray-100 p-4 rounded">
+        {JSON.stringify(session, null, 2)}
+      </pre>
     </div>
   )
 }

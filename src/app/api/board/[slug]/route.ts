@@ -1,21 +1,19 @@
-import { createServerSupabase } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
 
 export async function GET(
   request: Request,
   { params }: { params: { slug: string } }
 ) {
-  const supabase = await createServerSupabase()
-
   try {
-    // 카테고리 정보 조회
+    const supabase = await createClient()
     const { data: category, error: categoryError } = await supabase
       .from('categories')
       .select('*')
       .eq('slug', params.slug)
       .single()
 
-    if (categoryError || !category) {
+    if (categoryError) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     }
 
@@ -51,8 +49,7 @@ export async function GET(
       }
     }
 
-    // 게시글 조회
-    const { data: posts } = await supabase
+    const { data: posts, error: postsError } = await supabase
       .from('posts')
       .select(`
         *,
@@ -64,13 +61,19 @@ export async function GET(
       .eq('category_id', category.id)
       .order('created_at', { ascending: false })
 
+    if (postsError) {
+      return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
+    }
+
     return NextResponse.json({
       category,
       posts: posts || []
     })
-
   } catch (error) {
     console.error('API 에러:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    )
   }
 } 

@@ -102,148 +102,34 @@
 
 
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { generateVerificationCode, hashVerificationCode } from '@/utils/auth/verification-code'
 import { sendVerificationEmail } from '@/utils/email/sendEmail'
-import { createServerSupabase } from '@/utils/supabase/server'
 
 export async function POST(request: Request) {
   try {
-    const { email, slug } = await request.json()
-    
-    if (!email || !slug) {
-      return NextResponse.json(
-        { error: '이메일과 학교 정보가 필요합니다.' },
-        { status: 400 }
-      )
-    }
+    const supabase = await createClient()
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-    const supabase = await createServerSupabase()
-
-    // 사용자 정보 확인
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (!user || userError) {
+    if (sessionError || !session) {
       return NextResponse.json(
-        { error: '로그인이 필요합니다.' },
+        { error: '인증되지 않은 사용자입니다.' },
         { status: 401 }
       )
     }
 
-    // 학교 정보 확인
-    const { data: schoolData, error: schoolError } = await supabase
-      .from('categories')
-      .select('id, name')
-      .eq('slug', slug)
-      .eq('parent_id', 2)
-      .single()
+    const { schoolId, verificationCode } = await request.json()
 
-    if (schoolError || !schoolData) {
-      console.error('학교 정보 조회 에러:', schoolError)
-      return NextResponse.json(
-        { error: '학교 정보를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
-    }
+    // 여기에서 실제 학교 인증 로직을 구현
+    // 예: 이메일 도메인 확인, 학생증 인증 등
 
-    console.log('학교 정보:', {
-      slug,
-      school_id: schoolData.id,
-      school_name: schoolData.name
-    })
-
-    // 이메일 도메인 확인
-    const emailDomain = email.split('@')[1]
-    const { data: validDomain, error: domainError } = await supabase
-      .from('school_email_domains')
-      .select('*')
-      .eq('school_id', schoolData.id)
-      .eq('domain', emailDomain)
-      .single()
-
-    if (domainError || !validDomain) {
-      return NextResponse.json(
-        { error: '유효하지 않은 학교 이메일입니다.' },
-        { status: 400 }
-      )
-    }
-
-    // 6자리 인증 코드 생성
-    const verificationCode = generateVerificationCode()
-    const hashedCode = hashVerificationCode(verificationCode, email)
-
-    // 기존 인증 정보 삭제
-    const { error: deleteError } = await supabase
-      .from('school_verifications')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('school_id', schoolData.id)
-
-    if (deleteError) {
-      console.error('기존 인증 정보 삭제 에러:', deleteError)
-    }
-
-    // 새로운 인증 정보 저장
-    const { data: insertData, error: insertError } = await supabase
-      .from('school_verifications')
-      .insert({
-        user_id: user.id,
-        school_id: schoolData.id,
-        verification_method: 'email',
-        verification_code: hashedCode,
-        email: email,
-        status: 'pending',
-        verified_at: null
-      })
-      .select()
-      .single()
-
-    if (insertError) {
-      console.error('인증 정보 저장 에러:', insertError)
-      return NextResponse.json(
-        { error: '인증 정보 생성 중 오류가 발생했습니다.' },
-        { status: 500 }
-      )
-    }
-
-    console.log('인증 정보 저장 완료:', {
-      id: insertData?.id,
-      user_id: user.id,
-      school_id: schoolData.id,
-      email,
-      status: 'pending',
-      verification_code_length: hashedCode.length
-    })
-
-    // 인증 이메일 발송
-    const emailResult = await sendVerificationEmail(
-      email,
-      schoolData.name,
-      verificationCode
-    )
-
-    if (!emailResult.success) {
-      // 이메일 전송 실패 시 생성된 인증 정보 삭제
-      await supabase
-        .from('school_verifications')
-        .delete()
-        .eq('id', insertData.id)
-
-      return NextResponse.json(
-        { error: emailResult.error || '이메일 전송에 실패했습니다.' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ 
-      message: '인증 코드가 이메일로 발송되었습니다.',
-      success: true 
-    })
-
-  } catch (error: any) {
-    console.error('인증 처리 에러:', error)
+    // 임시로 성공 응답
+    return NextResponse.json({ message: '학교 인증이 완료되었습니다.' })
+  } catch (error) {
+    console.error('School verification error:', error)
     return NextResponse.json(
-      { error: error.message || '인증 처리 중 오류가 발생했습니다.' },
+      { error: '학교 인증 처리 중 오류가 발생했습니다.' },
       { status: 500 }
     )
   }

@@ -108,7 +108,7 @@
 
 // components/PostList.tsx
 'use client'
-import { createClientSupabase } from '@/utils/supabase/client'
+import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { formatKoreanDateTime } from '@/utils/date'
@@ -123,7 +123,7 @@ export default function PostList({ categoryId, requiresAuth, slug }: PostListPro
     const [posts, setPosts] = useState<any[]>([])
     const [session, setSession] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    const supabase = createClientSupabase()
+    const supabase = createClient()
 
     useEffect(() => {
         const fetchData = async () => {
