@@ -55,14 +55,16 @@ export default function Navbar() {
             {session ? (
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="inline-flex items-center bg-coral-500 hover:bg-coral-600 text-white font-medium px-4 py-2 rounded-md text-sm transition-colors duration-200"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+
               >
                 로그아웃
               </button>
             ) : (
               <Link
                 href="/auth/login"
-                className="inline-flex items-center bg-coral-500 hover:bg-coral-600 text-white font-medium px-4 py-2 rounded-md text-sm transition-colors duration-200"
+                // className="[&]:bg-coral-500 [&]:hover:bg-coral-600 text-white font-medium px-4 py-2 rounded-md text-sm transition-colors duration-200 inline-flex items-center"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
               >
                 로그인
               </Link>

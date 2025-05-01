@@ -70,17 +70,6 @@ export default function ClientSection() {
           </div>
         </motion.div>
       ))}
-      {/* ✅ 게시판 바로가기 버튼 */}
-      {isAuthenticated && isVerified && (
-        <div className="absolute -bottom-20 left-1/2 -translate-x-1/2">
-          <Link
-            href="/board/school"
-            className="inline-block px-6 py-2 bg-coral-500 text-white rounded-lg hover:bg-coral-600 transition-colors text-sm"
-          >
-            게시판 바로가기
-          </Link>
-        </div>
-      )}
     </div>
   );
 } 
