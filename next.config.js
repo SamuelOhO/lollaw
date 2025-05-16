@@ -18,6 +18,20 @@ const nextConfig = {
     // 동적 렌더링 허용
     serverActions: true,
   },
+  // 쿠키 설정 추가
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Set-Cookie',
+            value: 'SameSite=Lax; Path=/; HttpOnly',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

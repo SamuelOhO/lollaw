@@ -49,23 +49,23 @@ function LoginForm() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`,
-        },
-      });
+  // const handleGoogleLogin = async () => {
+  //   try {
+  //     const { error } = await supabase.auth.signInWithOAuth({
+  //       provider: 'google',
+  //       options: {
+  //         redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`,
+  //       },
+  //     });
 
-      if (error) {
-        throw error;
-      }
-    } catch (error: any) {
-      console.error('Google 로그인 오류:', error.message);
-      setError('Google 로그인 중 오류가 발생했습니다.');
-    }
-  };
+  //     if (error) {
+  //       throw error;
+  //     }
+  //   } catch (error: any) {
+  //     console.error('Google 로그인 오류:', error.message);
+  //     setError('Google 로그인 중 오류가 발생했습니다.');
+  //   }
+  // };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-2">
@@ -118,17 +118,17 @@ function LoginForm() {
           </p>
         </div>
 
-        <div className="relative w-full px-6 mb-8">
+        {/* <div className="relative w-full px-6 mb-8">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="px-2 bg-white text-gray-500">또는</span>
           </div>
-        </div>
+        </div> */}
 
         {/* Google 로그인 버튼 */}
-        <button
+        {/* <button
           onClick={handleGoogleLogin}
           className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
@@ -151,7 +151,7 @@ function LoginForm() {
             />
           </svg>
           <span>Google 로그인</span>
-        </button>
+        </button> */}
 
         {searchParams.get('error') && (
           <p className="mt-4 p-4 bg-red-50 text-red-600 text-center rounded">

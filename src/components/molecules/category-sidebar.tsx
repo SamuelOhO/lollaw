@@ -1,17 +1,14 @@
-'use client';
-
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import type { ExtendedCategory, Category } from '@/types/board';
+import CategoryLink from './category-link';
 
 type Props = {
   mainCategory: ExtendedCategory;
   subcategories: Category[];
+  pathname: string;
 };
 
-export default function CategorySidebar({ mainCategory, subcategories }: Props) {
-  const pathname = usePathname();
-
+export default function CategorySidebar({ mainCategory, subcategories, pathname }: Props) {
   // 표시할 카테고리 이름과 링크 결정
   const displayCategory = mainCategory.parent || mainCategory;
   const displayName = displayCategory.name;
@@ -26,17 +23,11 @@ export default function CategorySidebar({ mainCategory, subcategories }: Props) 
       </Link>
       <nav className="space-y-2">
         {subcategories.map(category => (
-          <Link
+          <CategoryLink
             key={category.id}
-            href={`/board/${category.slug}`}
-            className={`block px-4 py-2 rounded-lg transition-colors ${
-              pathname.includes(category.slug)
-                ? 'bg-coral-50 text-coral-600 dark:bg-coral-900/20 dark:text-coral-400'
-                : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50'
-            }`}
-          >
-            {category.name}
-          </Link>
+            category={category}
+            isActive={pathname.includes(category.slug)}
+          />
         ))}
       </nav>
     </div>

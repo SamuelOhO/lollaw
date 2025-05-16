@@ -24,22 +24,31 @@ export async function GET(request: Request) {
             return cookieStore.get(name)?.value;
           },
           set(name: string, value: string, options: CookieOptions) {
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
-              httpOnly: true,
-            });
+            try {
+              cookieStore.set({
+                name,
+                value,
+                ...options,
+                path: '/',
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production',
+                httpOnly: true,
+                maxAge: 60 * 60 * 24 * 7, // 7일
+              });
+            } catch (error) {
+              console.error('Cookie set error:', error);
+            }
           },
           remove(name: string, options: CookieOptions) {
-            cookieStore.delete({
-              name,
-              ...options,
-              path: '/',
-            });
+            try {
+              cookieStore.delete({
+                name,
+                ...options,
+                path: '/',
+              });
+            } catch (error) {
+              console.error('Cookie remove error:', error);
+            }
           },
         },
       }

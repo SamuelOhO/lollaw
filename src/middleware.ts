@@ -2,6 +2,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 
 // 환경 변수 검증 스키마
 const envSchema = z.object({
@@ -110,44 +111,28 @@ async function validateBoardAccess(
   return { hasAccess: true };
 }
 
-export async function middleware(request: NextRequest) {
-  try {
-    // 환경 변수 검증
-    envSchema.parse({
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      NEXT_PUBLIC_DOMAIN: process.env.NEXT_PUBLIC_DOMAIN,
-    });
-
-    const { user, supabase } = await validateAuth(request);
-
-    // 보호된 경로 체크
-    if (
-      !user &&
-      CONSTANTS.PROTECTED_ROUTES.some(route => request.nextUrl.pathname.startsWith(route))
-    ) {
-      const redirectUrl = new URL('/auth/login', request.url);
-      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    // 게시판 접근 권한 체크
-    if (request.nextUrl.pathname.startsWith('/board/')) {
-      const boardSlug = request.nextUrl.pathname.split('/')[2];
-      const { hasAccess, message } = await validateBoardAccess(user, boardSlug, supabase);
-
-      if (!hasAccess) {
-        return NextResponse.json({ error: message }, { status: 401 });
-      }
-    }
-
-    return NextResponse.next();
-  } catch (error) {
-    console.error('Middleware error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-  }
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req, res })
+  
+  // 세션 새로고침
+  await supabase.auth.getSession()
+  
+  // x-pathname 헤더 설정
+  res.headers.set('x-pathname', req.nextUrl.pathname)
+  
+  return res
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|auth).*)'],
-};
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+}
