@@ -85,9 +85,9 @@
 //       )
 //     }
 
-//     return NextResponse.json({ 
+//     return NextResponse.json({
 //       message: '인증 이메일이 발송되었습니다.',
-//       success: true 
+//       success: true
 //     })
 
 //   } catch (error: any) {
@@ -99,38 +99,33 @@
 //   }
 // }
 
-
-
-import { NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
-import { generateVerificationCode, hashVerificationCode } from '@/utils/auth/verification-code'
-import { sendVerificationEmail } from '@/utils/email/sendEmail'
+import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
+import { generateVerificationCode, hashVerificationCode } from '@/utils/auth/verification-code';
+import { sendVerificationEmail } from '@/utils/email/sendEmail';
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const supabase = await createClient();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: '인증되지 않은 사용자입니다.' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: '인증되지 않은 사용자입니다.' }, { status: 401 });
     }
 
-    const { schoolId, verificationCode } = await request.json()
+    const { schoolId, verificationCode } = await request.json();
 
     // 여기에서 실제 학교 인증 로직을 구현
     // 예: 이메일 도메인 확인, 학생증 인증 등
 
     // 임시로 성공 응답
-    return NextResponse.json({ message: '학교 인증이 완료되었습니다.' })
+    return NextResponse.json({ message: '학교 인증이 완료되었습니다.' });
   } catch (error) {
-    console.error('School verification error:', error)
-    return NextResponse.json(
-      { error: '학교 인증 처리 중 오류가 발생했습니다.' },
-      { status: 500 }
-    )
+    console.error('School verification error:', error);
+    return NextResponse.json({ error: '학교 인증 처리 중 오류가 발생했습니다.' }, { status: 500 });
   }
 }

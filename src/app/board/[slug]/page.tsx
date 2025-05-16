@@ -1,23 +1,23 @@
-'use client'
+'use client';
 
-import { notFound } from 'next/navigation'
-import CategorySidebar from '@/components/board/CategorySidebar'
-import Link from 'next/link'
-import { format } from 'date-fns'
-import { ko } from 'date-fns/locale'
-import { useCategory } from '@/hooks/useCategory'
-import { usePosts } from '@/hooks/usePosts'
+import CategorySidebar from '@/components/molecules/category-sidebar';
+import Link from 'next/link';
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { useCategory } from '@/hooks/useCategory';
+import { usePosts } from '@/hooks/usePosts';
 
-export default function BoardPage({
-  params: { slug }
-}: {
-  params: { slug: string }
-}) {
-  const { category, subcategories, loading: categoryLoading, error: categoryError } = useCategory(slug)
-  const { posts, loading: postsLoading, error: postsError } = usePosts(category?.id ?? null)
 
-  const loading = categoryLoading || postsLoading
-  const error = categoryError || postsError
+export default function BoardPage({ params: { slug } }: { params: { slug: string } }) {
+  const {
+    category,
+    subcategories,
+    loading: categoryLoading,
+    error: categoryError,
+  } = useCategory(slug);
+  const { posts, loading: postsLoading, session } = usePosts(category?.id ?? null);
+  const loading = categoryLoading || postsLoading;
+  const error = categoryError;
 
   if (error) {
     return (
@@ -27,7 +27,7 @@ export default function BoardPage({
           <p className="text-gray-600">{error}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!category || loading) {
@@ -35,7 +35,7 @@ export default function BoardPage({
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-coral-600"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -47,9 +47,7 @@ export default function BoardPage({
         <div className="lg:col-span-3">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {category.name}
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{category.name}</h1>
               <Link
                 href={`/board/${category.slug}/write`}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-coral-600 hover:bg-coral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-500"
@@ -60,7 +58,7 @@ export default function BoardPage({
             {posts.length > 0 ? (
               <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
                 <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {posts.map((post) => (
+                  {posts.map(post => (
                     <li key={post.id}>
                       <Link href={`/board/${category.slug}/${post.id}`}>
                         <div className="block hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -78,12 +76,14 @@ export default function BoardPage({
                             <div className="mt-2 sm:flex sm:justify-between">
                               <div className="sm:flex">
                                 <p className="flex items-center text-sm text-gray-500">
-                                  {post.profiles.display_name || '익명'}
+                                  {post.profiles?.display_name || '익명'}
                                 </p>
                               </div>
                               <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                                 <p>
-                                  {format(new Date(post.created_at || new Date()), 'PPP', { locale: ko })}
+                                  {format(new Date(post.created_at || new Date()), 'PPP', {
+                                    locale: ko,
+                                  })}
                                 </p>
                               </div>
                             </div>
@@ -103,5 +103,5 @@ export default function BoardPage({
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,15 +1,15 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { createClient } from '@/utils/supabase/server';
+import { cookies } from 'next/headers';
 
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'text' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -17,7 +17,7 @@ const handler = NextAuth({
         }
 
         const supabase = await createClient();
-        
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email: credentials.email,
           password: credentials.password,
@@ -32,8 +32,8 @@ const handler = NextAuth({
           email: data.user.email,
           name: data.user.user_metadata?.full_name || data.user.email,
         };
-      }
-    })
+      },
+    }),
   ],
   secret: process.env.JWT_SECRET,
   pages: {
@@ -51,8 +51,8 @@ const handler = NextAuth({
         session.user.id = token.id as string;
       }
       return session;
-    }
-  }
+    },
+  },
 });
 
-export { handler as GET, handler as POST }; 
+export { handler as GET, handler as POST };

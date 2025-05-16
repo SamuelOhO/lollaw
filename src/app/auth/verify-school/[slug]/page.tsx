@@ -1,25 +1,25 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useVerificationStore } from '@/store/verification'
-import * as React from 'react'
+import { useState } from 'react';
+import { useVerificationStore } from '@/store/verification';
+import * as React from 'react';
 
 interface PageProps {
   params: {
-    slug: string
-  }
+    slug: string;
+  };
 }
 
 export default function VerifySchoolPage({ params }: PageProps) {
-  const { slug } = params
-  const [email, setEmail] = useState('')
-  const [verificationCode, setVerificationCode] = useState('')
-  const [showCodeInput, setShowCodeInput] = useState(false)
-  const { setStatus, setLoading, isLoading } = useVerificationStore()
+  const { slug } = params;
+  const [email, setEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const { setStatus, setLoading, isLoading } = useVerificationStore();
 
   const handleSendVerification = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await fetch('/api/auth/school-verification', {
@@ -27,33 +27,32 @@ export default function VerifySchoolPage({ params }: PageProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           email,
-          slug
-        })
-      })
+          slug,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '인증 요청 중 오류가 발생했습니다.')
+        throw new Error(data.error || '인증 요청 중 오류가 발생했습니다.');
       }
 
-      setShowCodeInput(true)
-      setStatus('pending')
-      alert('인증 코드가 이메일로 발송되었습니다.')
-      
+      setShowCodeInput(true);
+      setStatus('pending');
+      alert('인증 코드가 이메일로 발송되었습니다.');
     } catch (error: any) {
-      console.error('인증 요청 에러:', error)
-      alert(error.message || '인증 요청 중 오류가 발생했습니다.')
+      console.error('인증 요청 에러:', error);
+      alert(error.message || '인증 요청 중 오류가 발생했습니다.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await fetch('/api/auth/verify-code', {
@@ -64,27 +63,26 @@ export default function VerifySchoolPage({ params }: PageProps) {
         body: JSON.stringify({
           code: verificationCode,
           email,
-          slug
-        })
-      })
+          slug,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '인증 코드 확인 중 오류가 발생했습니다.')
+        throw new Error(data.error || '인증 코드 확인 중 오류가 발생했습니다.');
       }
 
-      setStatus('verified')
-      alert('이메일 인증이 완료되었습니다.')
-      window.location.href = `/board/${slug}`
-      
+      setStatus('verified');
+      alert('이메일 인증이 완료되었습니다.');
+      window.location.href = `/board/${slug}`;
     } catch (error: any) {
-      console.error('인증 코드 확인 에러:', error)
-      alert(error.message || '인증 코드 확인 중 오류가 발생했습니다.')
+      console.error('인증 코드 확인 에러:', error);
+      alert(error.message || '인증 코드 확인 중 오류가 발생했습니다.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto p-6">
@@ -96,7 +94,7 @@ export default function VerifySchoolPage({ params }: PageProps) {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               className="w-full p-2 border rounded"
               placeholder="학교 이메일 주소"
               required
@@ -117,7 +115,7 @@ export default function VerifySchoolPage({ params }: PageProps) {
             <input
               type="text"
               value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
+              onChange={e => setVerificationCode(e.target.value)}
               className="w-full p-2 border rounded text-center text-2xl tracking-widest"
               placeholder="000000"
               maxLength={6}
@@ -146,5 +144,5 @@ export default function VerifySchoolPage({ params }: PageProps) {
         </form>
       )}
     </div>
-  )
+  );
 }

@@ -17,11 +17,8 @@ export function hashVerificationCode(code: string, email: string): string {
     code,
     email,
     hasJwtSecret: !!process.env.JWT_SECRET,
-    dataToHash
+    dataToHash,
   });
 
-  return crypto
-    .createHash('sha256')
-    .update(dataToHash)
-    .digest('hex');
-} 
+  return crypto.createHash('sha256').update(dataToHash).digest('hex');
+}

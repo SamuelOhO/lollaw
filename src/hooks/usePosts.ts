@@ -1,87 +1,47 @@
-import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import type { Post } from '@/types/board'
+import { createClient } from '@/utils/supabase/client';
+import { useEffect, useState } from 'react';
+import type { Post } from '@/types/models';
 
 export function usePosts(categoryId: number | null) {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      if (!categoryId) return
-
+    if (categoryId == null) return;
+    const fetchData = async () => {
       try {
-        setLoading(true)
-        setError(null)
-
-        const { data: postsData, error: postsError } = await supabase
+        setLoading(true);
+        // 세션 확인
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setSession(session);
+        // 게시글 가져오기
+        const { data: posts, error } = await supabase
           .from('posts')
-          .select(`
-            id,
-            title,
-            content,
-            created_at,
-            updated_at,
-            views,
-            user_id,
-            category_id,
-            profiles (
-              display_name,
-              avatar_url
-            ),
-            comments:comments(count),
-            likes:likes(count)
-          `)
+          .select(
+            `
+            *,
+            profiles:user_id (
+              display_name
+            )
+          `
+          )
           .eq('category_id', categoryId)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false });
 
-        if (postsError) {
-          console.error('Posts fetch error:', postsError)
-          throw new Error('게시글을 가져오는데 실패했습니다.')
-        }
-
-        if (postsData) {
-          const formattedPosts = postsData.map(post => ({
-            ...post,
-            profiles: {
-              display_name: post.profiles?.[0]?.display_name ?? null,
-              avatar_url: post.profiles?.[0]?.avatar_url ?? null
-            },
-            comments: { count: post.comments[0]?.count ?? 0 },
-            likes: { count: post.likes[0]?.count ?? 0 }
-          })) as Post[]
-          setPosts(formattedPosts)
-        }
-
+        if (error) throw error;
+        setPosts(posts || []);
       } catch (error) {
-        console.error('Error fetching posts:', error)
-        setError(error instanceof Error ? error.message : '게시글을 가져오는데 실패했습니다.')
+        console.error('게시글 로딩 오류:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
+    fetchData();
+  }, [categoryId, supabase]);
 
-    fetchPosts()
-
-    // 실시간 업데이트 구독
-    const channel = supabase
-      .channel('posts_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'posts',
-        filter: `category_id=eq.${categoryId}`
-      }, () => {
-        fetchPosts()
-      })
-      .subscribe()
-
-    return () => {
-      channel.unsubscribe()
-    }
-  }, [categoryId])
-
-  return { posts, loading, error }
-} 
+  return { posts, session, loading };
+}

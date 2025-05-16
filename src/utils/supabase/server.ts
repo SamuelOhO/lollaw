@@ -1,9 +1,9 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { Database } from '@/app/supabase'
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { Database } from '@/app/supabase';
 
 export const createClient = async () => {
-  const cookieStore = cookies()
+  const cookieStore = cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,7 +11,7 @@ export const createClient = async () => {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value
+          return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
           cookieStore.set({
@@ -22,14 +22,14 @@ export const createClient = async () => {
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production',
             httpOnly: true,
-          })
+          });
         },
         remove(name: string, options: CookieOptions) {
           cookieStore.delete({
             name,
             ...options,
             path: '/',
-          })
+          });
         },
       },
       auth: {
@@ -38,5 +38,5 @@ export const createClient = async () => {
         persistSession: true,
       },
     }
-  )
-} 
+  );
+};

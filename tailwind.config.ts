@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
@@ -15,8 +15,8 @@ const config: Config = {
           200: '#FFCCBF',
           300: '#FFB399',
           400: '#FF9973',
-          500: '#FF7F50',  // 실제 coral 색상
-          600: '#FF6633',  // hover 색상
+          500: '#FF7F50', // 실제 coral 색상
+          600: '#FF6633', // hover 색상
           700: '#FF4D1A',
           800: '#FF3300',
           900: '#CC2900',
@@ -25,6 +25,6 @@ const config: Config = {
     },
   },
   plugins: [],
-}
+};
 
-export default config 
+export default config;
