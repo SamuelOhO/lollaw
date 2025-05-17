@@ -1,9 +1,18 @@
--- 기존 카테고리의 parent_id를 임시로 NULL로 설정
+-- ✅ [1] 테이블 생성
+CREATE TABLE IF NOT EXISTS categories (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  parent_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  requires_auth BOOLEAN DEFAULT false
+);
+
+-- ✅ [2] 기존 카테고리의 parent_id를 임시로 NULL로 설정
 UPDATE categories 
 SET parent_id = NULL 
 WHERE parent_id IN (1, 2, 3);
 
--- 메인 카테고리 업데이트
+-- ✅ [3] 메인 카테고리 업데이트
 UPDATE categories
 SET name = CASE id
       WHEN 1 THEN '자유게시판'
@@ -21,17 +30,17 @@ SET name = CASE id
     END
 WHERE id IN (1, 2, 3);
 
--- 서브 카테고리 업데이트
+-- ✅ [4] 서브 카테고리 업데이트
 UPDATE categories
 SET parent_id = CASE slug
-      WHEN 'free-success' THEN 1  -- 합격수기의 하위 카테고리
-      WHEN 'free-student' THEN 3  -- LEET준비방법의 하위 카테고리
-      WHEN 'yonsei' THEN 2      -- 학교게시판의 하위 카테고리
-      WHEN 'konkuk' THEN 2      -- 학교게시판의 하위 카테고리
+      WHEN 'free-success' THEN 1
+      WHEN 'free-student' THEN 3
+      WHEN 'yonsei' THEN 2
+      WHEN 'konkuk' THEN 2
     END
 WHERE slug IN ('free-success', 'free-student', 'yonsei', 'konkuk');
 
--- 존재하지 않는 카테고리 추가
+-- ✅ [5] 존재하지 않는 카테고리 추가
 WITH new_categories (id, name, slug, parent_id, requires_auth) AS (
   VALUES 
     (1, '자유게시판'::text, 'free'::text, NULL::integer, false),
@@ -45,5 +54,5 @@ WHERE NOT EXISTS (
   SELECT 1 FROM categories WHERE id = new_categories.id
 );
 
--- 시퀀스 업데이트
+-- ✅ [6] 시퀀스 업데이트
 SELECT setval('categories_id_seq', (SELECT MAX(id) FROM categories)); 
