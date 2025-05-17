@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { formatKoreanDateTime } from '@/utils/date';
+import { format } from '@/utils/date';
 import type { Post } from '@/types/models';
 
 interface PostItemProps {
@@ -20,7 +20,7 @@ export default function PostItem({ post, slug }: PostItemProps) {
           <div className="mt-2 flex items-center text-sm text-gray-500">
             <span>{post.profiles?.display_name || '익명'}</span>
             <span className="mx-2">•</span>
-            <span>{formatKoreanDateTime(post.created_at)}</span>
+            <span>{format(post.created_at)}</span>
           </div>
         </div>
       </Link>

@@ -1,8 +1,8 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { Database } from '@/app/supabase';
 
-export const createClient = async () => {
+export function createClient() {
   const cookieStore = cookies();
 
   return createServerClient<Database>(
@@ -13,23 +13,19 @@ export const createClient = async () => {
         get(name: string) {
           return cookieStore.get(name)?.value;
         },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({
-            name,
-            value,
-            ...options,
-            path: '/',
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: true,
-          });
+        set(name: string, value: string, options: any) {
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch (error) {
+            // 쿠키 설정 실패 시 무시
+          }
         },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.delete({
-            name,
-            ...options,
-            path: '/',
-          });
+        remove(name: string, options: any) {
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch (error) {
+            // 쿠키 삭제 실패 시 무시
+          }
         },
       },
       auth: {
@@ -39,4 +35,4 @@ export const createClient = async () => {
       },
     }
   );
-};
+}

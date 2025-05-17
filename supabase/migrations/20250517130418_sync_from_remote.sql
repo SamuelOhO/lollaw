@@ -693,4 +693,21 @@ CREATE TRIGGER update_report_count AFTER INSERT OR DELETE ON public.reports FOR 
 
 CREATE TRIGGER verify_school_category BEFORE INSERT OR UPDATE ON public.school_verifications FOR EACH ROW EXECUTE FUNCTION check_school_verification();
 
+CREATE TABLE likes_comments (
+  id serial PRIMARY KEY,
+  comment_id integer NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (comment_id, user_id)
+);
+
+CREATE TABLE reports_comments (
+  id serial PRIMARY KEY,
+  comment_id integer NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  reason text NOT NULL,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (comment_id, user_id)
+);
+
 
