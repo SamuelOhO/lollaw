@@ -1,11 +1,11 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCategory } from './useCategory';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 import { Category } from '@/types/models';
 
 // Mock supabase
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
+jest.mock('@/utils/supabase/client', () => ({
+  createClient: jest.fn(() => ({
     channel: jest.fn(() => ({
       on: jest.fn().mockReturnThis(),
       subscribe: jest.fn().mockReturnThis(),
@@ -18,32 +18,37 @@ jest.mock('@/lib/supabase', () => ({
       limit: jest.fn().mockReturnThis(),
       data: [],
     })),
-  },
+  })),
 }));
+
+const supabase = createClient();
 
 describe('useCategory', () => {
   const mockCategory: Category = {
-    id: '1',
+    id: 1,
     name: 'Test Category',
     slug: 'test-category',
+    parent_id: null,
+    requires_auth: false,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 
   const mockSubcategories: Category[] = [
     {
-      id: '2',
+      id: 2,
       name: 'Test Subcategory 1',
       slug: 'test-subcategory-1',
+      parent_id: 1,
+      requires_auth: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
     {
-      id: '3',
+      id: 3,
       name: 'Test Subcategory 2',
       slug: 'test-subcategory-2',
+      parent_id: 1,
+      requires_auth: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     },
   ];
 
@@ -92,7 +97,7 @@ describe('useCategory', () => {
     const { result } = renderHook(() => useCategory('test-category'));
 
     await act(async () => {
-      const channel = supabase.channel();
+      const channel = supabase.channel('test-channel');
       const callback = (channel.on as jest.Mock).mock.calls[0][1];
       callback({ new: mockCategory });
     });
@@ -106,7 +111,7 @@ describe('useCategory', () => {
     const { result } = renderHook(() => useCategory('test-category'));
 
     await act(async () => {
-      const channel = supabase.channel();
+      const channel = supabase.channel('test-channel');
       const callback = (channel.on as jest.Mock).mock.calls[0][1];
       callback({ new: mockSubcategories[0] });
     });

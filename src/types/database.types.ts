@@ -64,21 +64,48 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          created_at: string;
           display_name: string | null;
           avatar_url: string | null;
+          created_at: string;
+          updated_at: string;
+          nickname_last_updated_at: string | null;
+          school_verified: boolean | null;
+          school_email: string | null;
+          school_document_url: string | null;
+          school_generation: number | null;
+          lawyer_verified: boolean | null;
+          user_type: string | null;
+          is_anonymous: boolean | null;
         };
         Insert: {
           id: string;
-          created_at?: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          nickname_last_updated_at?: string | null;
+          school_verified?: boolean | null;
+          school_email?: string | null;
+          school_document_url?: string | null;
+          school_generation?: number | null;
+          lawyer_verified?: boolean | null;
+          user_type?: string | null;
+          is_anonymous?: boolean | null;
         };
         Update: {
           id?: string;
-          created_at?: string;
           display_name?: string | null;
           avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          nickname_last_updated_at?: string | null;
+          school_verified?: boolean | null;
+          school_email?: string | null;
+          school_document_url?: string | null;
+          school_generation?: number | null;
+          lawyer_verified?: boolean | null;
+          user_type?: string | null;
+          is_anonymous?: boolean | null;
         };
       };
       comments: {

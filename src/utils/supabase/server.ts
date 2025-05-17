@@ -11,20 +11,41 @@ export function createClient() {
     {
       cookies: {
         get(name: string) {
-          return cookieStore.get(name)?.value;
+          if (!name.startsWith('sb-')) return undefined;
+          try {
+            const cookie = cookieStore.get(name);
+            return cookie?.value;
+          } catch (e) {
+            return undefined;
+          }
         },
         set(name: string, value: string, options: any) {
+          if (!name.startsWith('sb-')) return;
           try {
-            cookieStore.set({ name, value, ...options });
+            cookieStore.set({
+              name,
+              value,
+              ...options,
+              path: '/',
+              sameSite: 'lax',
+              secure: process.env.NODE_ENV === 'production',
+              httpOnly: true,
+              maxAge: 60 * 60 * 24 * 7, // 7일
+            });
           } catch (error) {
-            // 쿠키 설정 실패 시 무시
+            console.error('Cookie set error:', error);
           }
         },
         remove(name: string, options: any) {
+          if (!name.startsWith('sb-')) return;
           try {
-            cookieStore.set({ name, value: '', ...options });
+            cookieStore.delete({
+              name,
+              ...options,
+              path: '/',
+            });
           } catch (error) {
-            // 쿠키 삭제 실패 시 무시
+            console.error('Cookie remove error:', error);
           }
         },
       },
@@ -32,6 +53,7 @@ export function createClient() {
         flowType: 'pkce',
         detectSessionInUrl: true,
         persistSession: true,
+        autoRefreshToken: true,
       },
     }
   );

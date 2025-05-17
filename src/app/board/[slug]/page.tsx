@@ -2,6 +2,7 @@ import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { headers } from 'next/headers'
 import BoardClient from './BoardClient'
+import { redirect } from 'next/navigation'
 
 async function getCategoryData(supabase: any, slug: string) {
   const { data: category, error: categoryError } = await supabase
@@ -43,18 +44,11 @@ export default async function BoardPage({ params: { slug } }: { params: { slug: 
   const headersList = headers()
   const pathname = headersList.get('x-pathname') || ''
 
+  let category, subcategories, displayCategory;
   try {
-    const { category, subcategories } = await getCategoryData(supabase, slug)
-    const posts = await getPosts(supabase, category.id)
-
-    return (
-      <BoardClient
-        category={category}
-        subcategories={subcategories || []}
-        posts={posts || []}
-        pathname={pathname}
-      />
-    )
+    const result = await getCategoryData(supabase, slug);
+    category = result.category;
+    subcategories = result.subcategories;
   } catch (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -63,6 +57,25 @@ export default async function BoardPage({ params: { slug } }: { params: { slug: 
           <p className="text-gray-600">{error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'}</p>
         </div>
       </div>
-    )
+    );
   }
+
+  let posts = [];
+  // 대분류(상위 카테고리)라면 첫 번째 산하 카테고리의 게시글을 대신 보여주고, UI도 해당 카테고리명으로 표시
+  if (!category.parent_id && subcategories && subcategories.length > 0) {
+    displayCategory = subcategories[0];
+    posts = await getPosts(supabase, displayCategory.id);
+  } else {
+    displayCategory = category;
+    posts = await getPosts(supabase, category.id);
+  }
+
+  return (
+    <BoardClient
+      category={category}
+      subcategories={subcategories || []}
+      posts={posts || []}
+      pathname={pathname}
+    />
+  );
 }

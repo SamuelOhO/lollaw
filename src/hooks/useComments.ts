@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { Comment } from '@/types/comment';
 import type { User } from '@supabase/supabase-js';
+import toast from 'react-hot-toast';
 
 export function useComments(postId: number) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -119,7 +120,11 @@ export function useComments(postId: number) {
 
   // 댓글 좋아요 토글
   const toggleLikeComment = async (commentId: number, isLiked: boolean) => {
-    if (!user || isLoading) return;
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    if (isLoading) return;
     setIsLoading(true);
     setComments(prev => prev.map(comment =>
       comment.id === commentId
@@ -147,7 +152,7 @@ export function useComments(postId: number) {
             }
           : comment
       ));
-      alert('좋아요 처리 중 오류가 발생했습니다.');
+      toast.error('좋아요 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +160,11 @@ export function useComments(postId: number) {
 
   // 댓글 신고 토글
   const toggleReportComment = async (commentId: number, isReported: boolean, reason: string) => {
-    if (!user || isLoading) return;
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      return;
+    }
+    if (isLoading) return;
     setIsLoading(true);
     setComments(prev => prev.map(comment =>
       comment.id === commentId
@@ -183,14 +192,18 @@ export function useComments(postId: number) {
             }
           : comment
       ));
-      alert('신고 처리 중 오류가 발생했습니다.');
+      toast.error('신고 처리 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const addComment = async (content: string, parentId: number | null = null) => {
-    if (!user || !content.trim() || isLoading) return null;
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      return null;
+    }
+    if (!content.trim() || isLoading) return null;
 
     setIsLoading(true);
     try {
@@ -209,6 +222,7 @@ export function useComments(postId: number) {
       return data;
     } catch (error) {
       console.error('댓글 작성 중 오류:', error);
+      toast.error('댓글 작성 중 오류가 발생했습니다.');
       return null;
     } finally {
       setIsLoading(false);

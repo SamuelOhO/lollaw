@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/server';
 
 // 환경 변수 검증 스키마
 const envSchema = z.object({
@@ -20,7 +21,7 @@ const CONSTANTS = {
     httpOnly: true,
     maxAge: 60 * 60 * 24 * 7, // 7일
   },
-  PROTECTED_ROUTES: ['/mypage', '/board'],
+  PROTECTED_ROUTES: ['/mypage'],
   PUBLIC_ROUTES: ['/auth/login', '/auth/signup', '/'],
 };
 
@@ -30,109 +31,46 @@ interface BoardAccessResponse {
   message?: string;
 }
 
-// 인증 검증 헬퍼 함수
-async function validateAuth(request: NextRequest) {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          const cookieOptions: CookieOptions = {
-            ...CONSTANTS.COOKIE_OPTIONS,
-            ...options,
-          };
-          request.cookies.set({
-            name,
-            value,
-            ...cookieOptions,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          const cookieOptions: CookieOptions = {
-            ...CONSTANTS.COOKIE_OPTIONS,
-            ...options,
-          };
-          request.cookies.delete(name);
-        },
-      },
-    }
-  );
+// 비로그인 허용 카테고리 slug 리스트 (DB와 동기화 필요)
+const PUBLIC_CATEGORY_SLUGS = [
+  'free', 'free-student', 'leet', 'law-success', 'anything'
+];
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return { user, supabase };
+const PROTECTED_PATHS = ['/mypage', '/write'];
+const LOGIN_PATH = '/auth/login';
+
+function isProtectedPath(pathname: string) {
+  if (pathname === '/board' || pathname === '/board/') return false;
+  if (pathname.startsWith('/board/')) {
+    const parts = pathname.split('/');
+    const categorySlug = parts[2];
+    if (!categorySlug) return false;
+    // slug가 DB에 없는 경우(잘못된 접근)는 보호 경로로 간주하지 않고, 페이지에서 404 처리
+    if (![
+      'free', 'schools', 'free-student', 'leet', 'yonsei', 'konkuk', 'law-success', 'anything'
+    ].includes(categorySlug)) return false;
+    return !PUBLIC_CATEGORY_SLUGS.includes(categorySlug);
+  }
+  return CONSTANTS.PROTECTED_ROUTES.some((path) => pathname.startsWith(path));
 }
 
-// 게시판 접근 권한 검증
-async function validateBoardAccess(
-  user: any,
-  boardSlug: string,
-  supabase: any
-): Promise<BoardAccessResponse> {
-  if (!user) {
-    return {
-      hasAccess: false,
-      message: '학교게시판을 사용하시려면 로그인과 학교인증이 필요합니다.',
-    };
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const cookieNames = request.cookies.getAll().map((c) => c.name);
+  const isLoggedIn = cookieNames.some((name) => name.startsWith('sb-'));
+  const isLoginPage = pathname.startsWith(LOGIN_PATH);
+
+  // 비로그인 사용자가 보호 경로 접근 시
+  if (!isLoggedIn && isProtectedPath(pathname) && !isLoginPage) {
+    return NextResponse.redirect(new URL(LOGIN_PATH, request.url));
   }
-
-  const { data: category } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('slug', boardSlug)
-    .single();
-
-  if (!category) {
-    return { hasAccess: false, message: 'Category not found' };
+  // 로그인 사용자가 로그인 페이지 접근 시
+  if (isLoggedIn && isLoginPage) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
-
-  if (category.parent_id === 2) {
-    const { data: verifications } = await supabase
-      .from('school_verifications')
-      .select('school_id, status')
-      .eq('user_id', user.id)
-      .eq('status', 'verified')
-      .not('verified_at', 'is', null);
-
-    if (!verifications?.length) {
-      return { hasAccess: false, message: '학교 인증이 필요합니다.' };
-    }
-
-    if (verifications[0].school_id !== category.id) {
-      return { hasAccess: false, message: '다른 학교 게시판입니다.' };
-    }
-  }
-
-  return { hasAccess: true };
-}
-
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
-  
-  // 세션 새로고침
-  await supabase.auth.getSession()
-  
-  // x-pathname 헤더 설정
-  res.headers.set('x-pathname', req.nextUrl.pathname)
-  
-  return res
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
-}
+  matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
+};
