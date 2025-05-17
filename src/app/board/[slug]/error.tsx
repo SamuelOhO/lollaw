@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import Link from 'next/link'
+import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error)
-  }, [error])
+    console.error(error);
+  }, [error]);
 
   return (
     <div className="min-h-[50vh] flex items-center justify-center">
@@ -36,5 +36,5 @@ export default function Error({
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

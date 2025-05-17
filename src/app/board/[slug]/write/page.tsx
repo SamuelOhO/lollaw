@@ -1,91 +1,90 @@
 // app/board/[slug]/write/page.tsx
-'use client'
-import { useState, useEffect } from 'react'
-import { createClientSupabase } from '@/utils/supabase/client'
-import { useRouter, useParams } from 'next/navigation'
-import * as React from 'react'
+'use client';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { useRouter, useParams } from 'next/navigation';
+import * as React from 'react';
 
 interface WritePageProps {
-  params: { slug: string }
+  params: { slug: string };
 }
 
 export default function WritePage({ params }: WritePageProps) {
-  const router = useRouter()
-  const supabase = createClientSupabase()
-  const [title, setTitle] = useState<string>('')
-  const [content, setContent] = useState<string>('')
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-  const [category, setCategory] = useState<any>(null)
-  const { slug } = params
-  
+  const router = useRouter();
+  const supabase = createClient();
+  const [title, setTitle] = useState<string>('');
+  const [content, setContent] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [category, setCategory] = useState<any>(null);
+  const { slug } = params;
 
   useEffect(() => {
-
     const fetchCategory = async () => {
       // 현재 카테고리 정보 가져오기
       const { data: category, error } = await supabase
         .from('categories')
         .select('*, parent:parent_id(*)')
         .eq('slug', slug)
-        .single()
+        .single();
 
       if (error) {
-        console.error('카테고리 로딩 오류:', error)
-        router.push('/')
-        return
+        console.error('카테고리 로딩 오류:', error);
+        router.push('/');
+        return;
       }
 
-      setCategory(category)
+      setCategory(category);
 
       // 권한 체크
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (category.requires_auth && !session) {
-        router.push('/auth/login')
+        router.push('/auth/login');
       }
-    }
+    };
 
-    fetchCategory()
-  }, [slug, router, supabase])
+    fetchCategory();
+  }, [slug, router, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     try {
-      setIsSubmitting(true)
-      
-      const { data: { session } } = await supabase.auth.getSession()
+      setIsSubmitting(true);
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
-        router.push('/auth/login')
-        return
+        router.push('/auth/login');
+        return;
       }
 
       // 게시글 저장
-      const { error: postError } = await supabase
-        .from('posts')
-        .insert({
-          title,
-          content,
-          category_id: category.id,
-          user_id: session.user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+      const { error: postError } = await supabase.from('posts').insert({
+        title,
+        content,
+        category_id: category.id,
+        user_id: session.user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
-      if (postError) throw postError
+      if (postError) throw postError;
 
-      router.push(`/board/${slug}`)
-      router.refresh()
-      
+      router.push(`/board/${slug}`);
+      router.refresh();
     } catch (error) {
-      console.error('글 작성 오류:', error)
-      alert('글 작성에 실패했습니다')
+      console.error('글 작성 오류:', error);
+      alert('글 작성에 실패했습니다');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (!category) {
-    return <div>로딩중...</div>
+    return <div>로딩중...</div>;
   }
 
   return (
@@ -102,7 +101,7 @@ export default function WritePage({ params }: WritePageProps) {
             type="text"
             id="title"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={e => setTitle(e.target.value)}
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
@@ -115,7 +114,7 @@ export default function WritePage({ params }: WritePageProps) {
           <textarea
             id="content"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={e => setContent(e.target.value)}
             required
             rows={10}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
@@ -133,5 +132,5 @@ export default function WritePage({ params }: WritePageProps) {
         </div>
       </div>
     </form>
-  )
+  );
 }

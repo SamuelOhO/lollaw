@@ -5,32 +5,32 @@ const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    pass: process.env.EMAIL_PASSWORD,
   },
   secure: true, // SSL/TLS 사용
   tls: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
   },
   pool: true, // 연결 풀링 사용
   maxConnections: 1, // 동시 연결 수 제한
   rateDelta: 20000, // 이메일 발송 간격 (ms)
   rateLimit: 5, // 특정 시간 내 최대 이메일 발송 수
-})
+});
 
 // 이메일 전송 전에 연결 테스트
 async function verifyEmailConnection() {
   try {
-    await transporter.verify()
-    console.log('이메일 서버 연결 성공')
-    return true
+    await transporter.verify();
+    console.log('이메일 서버 연결 성공');
+    return true;
   } catch (error) {
-    console.error('이메일 서버 연결 실패:', error)
-    return false
+    console.error('이메일 서버 연결 실패:', error);
+    return false;
   }
 }
 
 // export async function sendVerificationEmail(
-//   toEmail: string, 
+//   toEmail: string,
 //   verificationToken: string,
 //   schoolName: string
 // ) {
@@ -44,9 +44,9 @@ async function verifyEmailConnection() {
 //       <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
 //         <h2>학교 이메일 인증</h2>
 //         <p>안녕하세요. 학교 이메일 인증을 위해 아래 버튼을 클릭해주세요.</p>
-//         <a href="${verificationUrl}" 
-//            style="display: inline-block; padding: 10px 20px; 
-//                   background-color: #0070f3; color: white; 
+//         <a href="${verificationUrl}"
+//            style="display: inline-block; padding: 10px 20px;
+//                   background-color: #0070f3; color: white;
 //                   text-decoration: none; border-radius: 5px;">
 //           이메일 인증하기
 //         </a>
@@ -80,19 +80,23 @@ async function verifyEmailConnection() {
 //     throw error
 //   }
 // }
-export async function sendVerificationEmail(email: string, schoolName: string, verificationCode: string) {
-  const isConnected = await verifyEmailConnection()
+export async function sendVerificationEmail(
+  email: string,
+  schoolName: string,
+  verificationCode: string
+) {
+  const isConnected = await verifyEmailConnection();
   if (!isConnected) {
-    return { 
-      success: false, 
-      error: '이메일 서버 연결에 실패했습니다. 관리자에게 문의해주세요.' 
-    }
+    return {
+      success: false,
+      error: '이메일 서버 연결에 실패했습니다. 관리자에게 문의해주세요.',
+    };
   }
 
   const mailOptions = {
     from: {
       name: 'LolLaw 인증센터',
-      address: process.env.EMAIL_USER as string
+      address: process.env.EMAIL_USER as string,
     },
     to: email,
     subject: `[${schoolName}] 학교 이메일 인증 코드`,
@@ -132,17 +136,17 @@ export async function sendVerificationEmail(email: string, schoolName: string, v
       이 인증 코드는 5분간 유효합니다.
       
       © ${new Date().getFullYear()} LolLaw
-    `
-  }
+    `,
+  };
 
   try {
-    await transporter.sendMail(mailOptions)
-    return { success: true }
+    await transporter.sendMail(mailOptions);
+    return { success: true };
   } catch (error) {
-    console.error('이메일 전송 에러:', error)
-    return { 
-      success: false, 
-      error: '이메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.' 
-    }
+    console.error('이메일 전송 에러:', error);
+    return {
+      success: false,
+      error: '이메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    };
   }
 }

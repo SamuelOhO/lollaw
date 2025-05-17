@@ -1,11 +1,8 @@
 // utils/date.ts
-export function formatKoreanDateTime(date: string | Date) {
-    return new Date(date).toLocaleString('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+import { format as dateFnsFormat } from 'date-fns';
+import { ko } from 'date-fns/locale';
+
+export function format(date: string | Date) {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateFnsFormat(dateObj, 'yyyy년 MM월 dd일 HH:mm', { locale: ko });
+}

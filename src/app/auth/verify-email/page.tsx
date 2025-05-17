@@ -1,12 +1,62 @@
-import { Suspense } from 'react'
-import VerifyEmailClient from '@/app/auth/verify-email/VerifyEmailClient'
+'use client';
 
-export default function Page() {
+import { useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
+
+export default function VerifyEmailPage() {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
+
+  const handleResendEmail = async () => {
+    setLoading(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.resend({
+        type: 'signup',
+        email: localStorage.getItem('signupEmail') || '',
+      });
+
+      if (error) throw error;
+
+      setMessage('인증 이메일이 재전송되었습니다. 이메일함을 확인해주세요.');
+    } catch (error: any) {
+      setError(error.message || '이메일 재전송에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <Suspense fallback={<div>로딩 중...</div>}>
-      <VerifyEmailClient />
-    </Suspense>
-  )
+    <div className="flex min-h-screen flex-col items-center justify-center py-2">
+      <div className="text-center max-w-md px-6">
+        <h1 className="text-4xl font-bold mb-8">이메일 인증</h1>
+        <div className="bg-blue-50 p-6 rounded-lg">
+          <p className="text-lg text-gray-700 mb-4">회원가입이 거의 완료되었습니다!</p>
+          <p className="text-gray-600 mb-4">
+            입력하신 이메일 주소로 인증 링크를 보내드렸습니다.
+            <br />
+            이메일을 확인하시고 링크를 클릭하여 인증을 완료해주세요.
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            이메일이 도착하지 않았다면 스팸 메일함을 확인해주세요.
+          </p>
+          <button
+            onClick={handleResendEmail}
+            disabled={loading}
+            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {loading ? '전송 중...' : '인증 이메일 다시 받기'}
+          </button>
+          {message && <p className="mt-4 text-sm text-green-600">{message}</p>}
+          {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // 'use client'
@@ -49,7 +99,7 @@ export default function Page() {
 
 //         setStatus('success')
 //         setMessage('이메일 인증이 완료되었습니다.')
-        
+
 //         // 3초 후 메인 페이지로 리다이렉트
 //         setTimeout(() => {
 //           router.push('/')
@@ -76,7 +126,7 @@ export default function Page() {
 //               </h2>
 //             </>
 //           )}
-          
+
 //           {status === 'success' && (
 //             <>
 //               <div className="mx-auto h-12 w-12 text-green-500">
@@ -89,7 +139,7 @@ export default function Page() {
 //               </h2>
 //             </>
 //           )}
-          
+
 //           {status === 'error' && (
 //             <>
 //               <div className="mx-auto h-12 w-12 text-red-500">
@@ -102,7 +152,7 @@ export default function Page() {
 //               </h2>
 //             </>
 //           )}
-          
+
 //           <p className="mt-2 text-sm text-gray-600">
 //             {message}
 //           </p>
@@ -111,4 +161,3 @@ export default function Page() {
 //     </div>
 //   )
 // }
-

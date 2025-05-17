@@ -10,4 +10,4 @@ export interface SchoolVerification {
   status: VerificationStatus;
   verification_code?: string;
   created_at: string;
-} 
+}

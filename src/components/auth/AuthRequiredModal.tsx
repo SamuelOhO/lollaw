@@ -1,35 +1,33 @@
-'use client'
+'use client';
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 
 interface AuthRequiredModalProps {
-  isOpen: boolean
-  onClose: () => void
-  message: string
-  redirectUrl?: string
+  isOpen: boolean;
+  onClose: () => void;
+  message: string;
+  redirectUrl?: string;
 }
 
-export default function AuthRequiredModal({ 
-  isOpen, 
-  onClose, 
+export default function AuthRequiredModal({
+  isOpen,
+  onClose,
   message,
-  redirectUrl = '/auth/login'
+  redirectUrl = '/auth/login',
 }: AuthRequiredModalProps) {
-  const router = useRouter()
+  const router = useRouter();
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   const handleLogin = () => {
-    router.push(redirectUrl)
-  }
+    router.push(redirectUrl);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
         <h2 className="text-2xl font-bold mb-4">로그인 필요</h2>
-        <p className="text-gray-600 mb-6">
-          {message}
-        </p>
+        <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex justify-end space-x-4">
           <button
             onClick={onClose}
@@ -46,5 +44,5 @@ export default function AuthRequiredModal({
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

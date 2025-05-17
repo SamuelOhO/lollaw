@@ -1,44 +1,43 @@
-'use client'
+'use client';
 
-import React, { FormEvent, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import React, { FormEvent, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function VerifyEmailClient() {
-  const [status, setStatus] = useState<'input' | 'verifying' | 'success' | 'error'>('input')
-  const [message, setMessage] = useState('')
-  const [verificationCode, setVerificationCode] = useState('')
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const email = searchParams.get('email')
+  const [status, setStatus] = useState<'input' | 'verifying' | 'success' | 'error'>('input');
+  const [message, setMessage] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get('email');
 
   const handleVerification = async (e: FormEvent) => {
-    e.preventDefault()
-    setStatus('verifying')
+    e.preventDefault();
+    setStatus('verifying');
 
     try {
       const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           code: verificationCode,
-          email 
-        })
-      })
+          email,
+        }),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
-      if (!response.ok) throw new Error(data.error)
+      if (!response.ok) throw new Error(data.error);
 
-      setStatus('success')
-      setMessage('이메일 인증이 완료되었습니다.')
+      setStatus('success');
+      setMessage('이메일 인증이 완료되었습니다.');
 
-      setTimeout(() => router.push('/'), 3000)
-
+      setTimeout(() => router.push('/'), 3000);
     } catch (error: any) {
-      setStatus('error')
-      setMessage(error.message || '인증 처리 중 오류가 발생했습니다.')
+      setStatus('error');
+      setMessage(error.message || '인증 처리 중 오류가 발생했습니다.');
     }
-  }
+  };
 
   if (!email) {
     return (
@@ -49,7 +48,7 @@ export default function VerifyEmailClient() {
           <p className="mt-2 text-sm text-gray-600">유효하지 않은 인증 링크입니다.</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -58,11 +57,13 @@ export default function VerifyEmailClient() {
         {status === 'input' && (
           <form onSubmit={handleVerification}>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">이메일 인증</h2>
-            <p className="mt-2 text-sm text-gray-600 mb-4">{email}로 전송된 6자리 인증 코드를 입력해주세요.</p>
+            <p className="mt-2 text-sm text-gray-600 mb-4">
+              {email}로 전송된 6자리 인증 코드를 입력해주세요.
+            </p>
             <input
               type="text"
               value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
+              onChange={e => setVerificationCode(e.target.value)}
               maxLength={6}
               className="w-full p-4 text-center text-2xl tracking-widest border rounded-lg mb-4"
               placeholder="000000"
@@ -76,16 +77,14 @@ export default function VerifyEmailClient() {
             </button>
           </form>
         )}
-        
+
         {status === 'verifying' && (
           <>
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              인증 처리 중...
-            </h2>
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">인증 처리 중...</h2>
           </>
         )}
-        
+
         {status === 'success' && (
           <>
             <div className="mx-auto h-12 w-12 text-green-500">✅</div>
@@ -93,7 +92,7 @@ export default function VerifyEmailClient() {
             <p className="mt-2 text-sm text-gray-600">{message}</p>
           </>
         )}
-        
+
         {status === 'error' && (
           <>
             <div className="mx-auto h-12 w-12 text-red-500">❌</div>
@@ -103,8 +102,8 @@ export default function VerifyEmailClient() {
         )}
       </div>
     </div>
-  )
-} 
+  );
+}
 
 // 'use client'
 

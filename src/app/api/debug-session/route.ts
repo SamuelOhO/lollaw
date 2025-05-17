@@ -1,12 +1,17 @@
 // app/api/debug-session/route.ts
-import { createServerSupabase } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
-  const supabase = await createServerSupabase()
+  const supabase = await createClient();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
 
-  const { data: { session } } = await supabase.auth.getSession()
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
-  return NextResponse.json({ session })
+  return NextResponse.json({ session });
 }
