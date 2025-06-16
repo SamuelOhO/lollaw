@@ -14,6 +14,9 @@ export default function CategorySidebar({ mainCategory, subcategories, pathname 
   const displayName = displayCategory.name;
   const displaySlug = displayCategory.slug;
 
+  // 현재 선택된 서브카테고리 찾기
+  const currentSubcategory = subcategories.find(cat => pathname.includes(cat.slug));
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <Link href={`/board/${displaySlug}`} className="block mb-4">
@@ -27,6 +30,7 @@ export default function CategorySidebar({ mainCategory, subcategories, pathname 
             key={category.id}
             category={category}
             isActive={pathname.includes(category.slug)}
+            isHighlighted={currentSubcategory?.id === category.id}
           />
         ))}
       </nav>

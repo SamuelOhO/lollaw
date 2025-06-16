@@ -68,7 +68,7 @@ export default function CommentItem({ comment, onReply, showReplyButton, user, l
     }
   };
 
-  const isHidden = (comment.reportCount ?? 0) >= 10 && !showContent;
+  const isHidden = (comment.report_count ?? 0) >= 10 && !showContent;
 
   return (
     <div className={`mt-4 ${level > 0 ? 'ml-8' : ''}`}>
@@ -114,7 +114,7 @@ export default function CommentItem({ comment, onReply, showReplyButton, user, l
               disabled={!user || isLoading}
               aria-label="좋아요"
             >
-              ♥ {comment.likesCount ?? 0}
+              ♥ {comment.likes_count ?? 0}
             </button>
             {/* 신고 버튼 */}
             <button
@@ -123,7 +123,7 @@ export default function CommentItem({ comment, onReply, showReplyButton, user, l
               disabled={!user || isLoading}
               aria-label="신고"
             >
-              🚩 {comment.reportCount ?? 0}
+              🚩 {comment.report_count ?? 0}
             </button>
             {showReplyButton && user && (
               <button

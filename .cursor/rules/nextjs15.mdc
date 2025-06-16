@@ -3,12 +3,4 @@ description:
 globs: 
 alwaysApply: false
 ---
-{
-  "framework": "nextjs@15.3.2",
-  "conventions": ["korean-community", "nextjs-official"],
-  "styleGuide": {
-    "folderStructure": "app-router-advanced",
-    "component": "atomic-design",
-    "stateManagement": "zustand"
-  }
-}
+    "next": "^14.1.3",

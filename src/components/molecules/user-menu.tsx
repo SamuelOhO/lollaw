@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
 import { signInWithGoogle } from '@/app/auth/actions';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 interface UserProfile {
   display_name?: string;
@@ -13,6 +15,7 @@ export default function UserMenu() {
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
   const [, setSession] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -46,9 +49,12 @@ export default function UserMenu() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      window.location.href = '/';
+      toast.success('로그아웃 되었습니다.');
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
     } catch (error) {
-      console.error('로그아웃 오류:', error);
+      toast.error('로그아웃 중 오류가 발생했습니다.');
     }
   };
 

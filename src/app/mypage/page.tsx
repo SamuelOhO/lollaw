@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@/utils/supabase/client';
 import type { Database } from '@/types/database.types';
 import { toast } from 'react-hot-toast';
 
@@ -11,7 +11,7 @@ type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export default function MyPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient<Database>();
+  const supabase = createClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
