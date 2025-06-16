@@ -1,4 +1,4 @@
-import { formatKoreanDateTime } from '@/utils/date';
+import { formatKoreanDateTime, formatDate } from '@/utils/date';
 
 describe('formatKoreanDateTime', () => {
   beforeEach(() => {
@@ -46,4 +46,27 @@ describe('formatKoreanDateTime', () => {
     const formatted = formatKoreanDateTime(date);
     expect(formatted).toMatch(/2024년 3월 20일 오전 ?0?9:00/);
   });
-}); 
+});
+
+describe('formatDate', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2024-03-20T12:00:00Z'));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('방금 전 포맷을 반환해야 합니다', () => {
+    const date = new Date('2024-03-20T11:59:30Z');
+    const result = formatDate(date.toISOString());
+    expect(result).toBe('방금 전');
+  });
+
+  it('분 단위 포맷을 반환해야 합니다', () => {
+    const date = new Date('2024-03-20T11:50:00Z');
+    const result = formatDate(date.toISOString());
+    expect(result).toBe('10분 전');
+  });
+});

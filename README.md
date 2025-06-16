@@ -114,7 +114,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## 환경 변수 설정
 
-아래 환경변수는 프로젝트 루트의 `.env` 파일에 반드시 설정해야 합니다.
+아래 환경변수는 프로젝트 루트의 `.env.local` 파일에 반드시 설정해야 합니다.
 
 | 변수명                        | 설명                  |
 | ----------------------------- | --------------------- |
@@ -122,4 +122,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 | NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase 익명 키      |
 | NEXT_PUBLIC_DOMAIN            | 서비스 도메인 (선택)  |
 
-`.env.example` 파일을 참고하여 `.env` 파일을 생성하세요.
+`.env.example` 파일을 참고하여 `.env.local` 파일을 생성하세요.
