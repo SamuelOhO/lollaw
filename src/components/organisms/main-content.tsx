@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { CardStack } from '@/components/atoms/card-stack';
+import { CardStack } from '@/components/ui/card-stack';
 import SchoolSection from '@/components/organisms/school-section';
 import type { TopPost } from '@/hooks/useTopPosts';
 import { useState, useEffect } from 'react';

@@ -7,6 +7,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import Navbar from '@/components/templates/Navbar';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -31,10 +32,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body className={inter.className}>
-        <Providers>
-          <Navbar />
-          <main className="pt-16 min-h-screen bg-gray-50">{children}</main>
-        </Providers>
+        <AuthProvider>
+          <Providers>
+            <Navbar />
+            <main className="pt-16 min-h-screen bg-gray-50">{children}</main>
+          </Providers>
+        </AuthProvider>
         <Analytics />
         <SpeedInsights />
         <Toaster position="top-center" />

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import type { Post } from '@/types/board';
 import toast from 'react-hot-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function usePost(postId: string) {
   const [post, setPost] = useState<Post | null>(null);
@@ -9,6 +10,7 @@ export function usePost(postId: string) {
   const [likesCount, setLikesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   const supabase = createClient();
 
   const fetchPost = async () => {
@@ -69,31 +71,28 @@ export function usePost(postId: string) {
     }
   };
 
-  const checkLikeStatus = async (user: any) => {
+  const checkLikeStatus = async () => {
     if (!user) {
       setIsLiked(false);
       return;
     }
+
     try {
-      const likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '{}');
-      if (likedPosts[postId]) {
-        setIsLiked(true);
+      const { data, error } = await supabase
+        .from('likes')
+        .select('*')
+        .eq('post_id', parseInt(postId))
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('좋아요 상태 확인 중 오류:', error);
         return;
       }
-      const { data } = await supabase
-        .from('likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', postId)
-        .eq('user_id', user.id);
-      const liked = !!data;
-      setIsLiked(liked);
-      if (liked) {
-        likedPosts[postId] = true;
-        localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
-      }
-    } catch (error) {
-      console.error('좋아요 상태 확인 중 오류:', error);
-      setIsLiked(false);
+
+      setIsLiked(!!data);
+    } catch (err) {
+      console.error('좋아요 상태 확인 중 오류:', err);
     }
   };
 

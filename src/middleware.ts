@@ -2,8 +2,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { createClient } from '@/utils/supabase/server';
 
 // 환경 변수 검증 스키마
 const envSchema = z.object({

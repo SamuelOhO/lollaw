@@ -2,19 +2,32 @@
 
 export interface Comment {
   id: number;
+  post_id: number;
+  user_id: string;
   content: string;
   created_at: string;
   updated_at: string;
-  user_id: string;
-  post_id: number;
   parent_id: number | null;
-  profiles?: {
+  report_count?: number;
+  is_hidden?: boolean;
+  profiles: {
+    username: string;
     display_name: string | null;
     avatar_url: string | null;
-  };
+  } | null;
+  user: {
+    id: string;
+    profiles: {
+      username: string;
+      display_name: string | null;
+      avatar_url: string | null;
+    } | null;
+  } | null;
   replies?: Comment[];
-  likesCount?: number;
+  likes_count?: number;
   isLiked?: boolean;
-  reportCount?: number;
   isReported?: boolean;
+  // UI에서 사용되는 필드들
+  display_name?: string | null;
+  avatar_url?: string | null;
 } 

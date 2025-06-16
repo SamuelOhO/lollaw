@@ -1,4 +1,4 @@
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { headers } from 'next/headers'
 import BoardClient from './BoardClient'
@@ -40,7 +40,7 @@ async function getPosts(supabase: any, categoryId: number) {
 }
 
 export default async function BoardPage({ params: { slug } }: { params: { slug: string } }) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = await createClient()
   const headersList = headers()
   const pathname = headersList.get('x-pathname') || ''
 

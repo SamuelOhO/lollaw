@@ -1,60 +1,36 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { Database } from '@/app/supabase';
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies()
 
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         get(name: string) {
-          if (!name.startsWith('sb-')) return undefined;
-          try {
-            const cookie = cookieStore.get(name);
-            return cookie?.value;
-          } catch (e) {
-            return undefined;
-          }
+          return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
-          if (!name.startsWith('sb-')) return;
+        set(name: string, value: string, options: CookieOptions) {
           try {
-            cookieStore.set({
-              name,
-              value,
-              ...options,
-              path: '/',
-              sameSite: 'lax',
-              secure: process.env.NODE_ENV === 'production',
-              httpOnly: true,
-              maxAge: 60 * 60 * 24 * 7, // 7일
-            });
+            cookieStore.set({ name, value, ...options })
           } catch (error) {
-            console.error('Cookie set error:', error);
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
-        remove(name: string, options: any) {
-          if (!name.startsWith('sb-')) return;
+        remove(name: string, options: CookieOptions) {
           try {
-            cookieStore.delete({
-              name,
-              ...options,
-              path: '/',
-            });
+            cookieStore.set({ name, value: '', ...options })
           } catch (error) {
-            console.error('Cookie remove error:', error);
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
           }
         },
-      },
-      auth: {
-        flowType: 'pkce',
-        detectSessionInUrl: true,
-        persistSession: true,
-        autoRefreshToken: true,
       },
     }
-  );
+  )
 }

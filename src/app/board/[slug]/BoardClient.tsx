@@ -47,7 +47,11 @@ export default function BoardClient({ category, subcategories, posts, pathname }
         <div className="lg:col-span-3">
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{subcategories[0].name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {subcategories && subcategories.length > 0 
+                  ? subcategories[0].name 
+                  : category.name}
+              </h1>
               <Link
                 href={isLoggedIn ? `/board/${category.slug}/write` : '#'}
                 onClick={handleWriteClick}
