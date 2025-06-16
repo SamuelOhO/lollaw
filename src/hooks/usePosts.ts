@@ -1,12 +1,12 @@
 import { createClient } from '@/utils/supabase/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { Post } from '@/types/models';
 
 export function usePosts(categoryId: number | null) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     if (categoryId == null) return;
@@ -41,7 +41,7 @@ export function usePosts(categoryId: number | null) {
       }
     };
     fetchData();
-  }, [categoryId, supabase]);
+  }, [categoryId]);
 
   return { posts, session, loading };
 }
