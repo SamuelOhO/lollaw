@@ -8,6 +8,7 @@ import Navbar from '@/components/templates/Navbar';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
 
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -35,9 +36,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           <main className="pt-16 min-h-screen bg-gray-50">{children}</main>
         </Providers>
-        <Analytics />
-        <SpeedInsights />
-        <Toaster position="bottom-center" />
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
+        <Toaster position="top-center" />
       </body>
     </html>
   );

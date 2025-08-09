@@ -14,9 +14,8 @@ const nextConfig = {
     config.ignoreWarnings = [{ module: /node_modules\/punycode/ }];
     return config;
   },
-  experimental: {
-    // 동적 렌더링 허용
-    serverActions: true,
+  images: {
+    domains: ['unlttrlmpzbvnscsfvuw.supabase.co'],
   },
   // 쿠키 설정 추가
   async headers() {

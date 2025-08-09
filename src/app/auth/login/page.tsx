@@ -1,52 +1,35 @@
 'use client';
 
-import { createClient } from '@/utils/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
+  const { isAuthenticated, login, isLoggingIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const redirectPath = searchParams.get('redirect') || '/';
 
+  // 이미 로그인된 사용자는 리다이렉트
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        router.push(redirectPath);
-      }
-    };
-    checkUser();
-  }, [router, redirectPath, supabase.auth]);
+    if (isAuthenticated) {
+      const returnUrl = searchParams.get('returnUrl') || redirectPath;
+      router.replace(returnUrl);
+    }
+  }, [isAuthenticated, router, redirectPath, searchParams]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      const returnUrl = searchParams.get('returnUrl') || '/';
-      router.replace(returnUrl);
-    } catch (error: any) {
-      setError(error.message || '로그인 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
+    
+    login({ email, password }, {
+      onSuccess: () => {
+        const returnUrl = searchParams.get('returnUrl') || '/';
+        router.replace(returnUrl);
+      }
+    });
   };
 
   // const handleGoogleLogin = async () => {
@@ -103,13 +86,12 @@ function LoginForm() {
             </div>
             <button
               type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isLoggingIn}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {loading ? '로그인 중...' : '로그인'}
+              {isLoggingIn ? '로그인 중...' : '로그인'}
             </button>
           </form>
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
           <p className="mt-4 text-sm text-gray-600 text-center">
             계정이 없으신가요?{' '}
             <Link href="/auth/signup" className="text-blue-600 hover:text-blue-500">

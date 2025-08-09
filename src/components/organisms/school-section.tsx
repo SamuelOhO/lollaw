@@ -1,6 +1,6 @@
 'use client';
 
-import { CardStack } from '@/components/atoms/card-stack';
+import { CardStack } from '@/components/ui/card-stack';
 
 interface SchoolItem {
   id: number;

@@ -1,10 +1,10 @@
 // components/CategoryList.tsx
 'use client';
-import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthRequiredModal from './auth/AuthRequiredModal';
+import { useAuth } from '@/hooks/useAuth';
+import AuthRequiredModal from '../auth/AuthRequiredModal';
 
 interface Category {
   id: number;
@@ -19,26 +19,14 @@ interface CategoryListProps {
 }
 
 export default function CategoryList({ categories }: CategoryListProps) {
-  const [session, setSession] = useState<any>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const supabase = createClient();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
-
-  useEffect(() => {
-    const fetchSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-    };
-
-    fetchSession();
-  }, [supabase]);
 
   const handleCategoryClick = (category: Category) => {
     // 학교 게시판이고 로그인하지 않은 경우에만 모달 표시
-    if (category.parent_id === 2 && !session) {
+    if (category.parent_id === 2 && !isAuthenticated) {
       localStorage.setItem('intendedPath', `/board/${category.slug}`);
       setSelectedCategory(category);
       setShowAuthModal(true);

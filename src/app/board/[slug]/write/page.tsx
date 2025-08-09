@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import * as React from 'react';
+import { logError } from '@/utils/error-handler';
 
 interface WritePageProps {
   params: { slug: string };
@@ -28,7 +29,7 @@ export default function WritePage({ params }: WritePageProps) {
         .single();
 
       if (error) {
-        console.error('카테고리 로딩 오류:', error);
+        logError(error, 'Category loading error');
         router.push('/');
         return;
       }
@@ -76,7 +77,7 @@ export default function WritePage({ params }: WritePageProps) {
       router.push(`/board/${slug}`);
       router.refresh();
     } catch (error) {
-      console.error('글 작성 오류:', error);
+      logError(error, 'Post creation error');
       alert('글 작성에 실패했습니다');
     } finally {
       setIsSubmitting(false);

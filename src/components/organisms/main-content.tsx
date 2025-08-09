@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { CardStack } from '@/components/atoms/card-stack';
+import { CardStack } from '@/components/ui/card-stack';
 import SchoolSection from '@/components/organisms/school-section';
 import type { TopPost } from '@/hooks/useTopPosts';
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import AuthModal from '@/components/molecules/auth-modal';
 
 interface MainContentProps {
   freeboardData: TopPost[];
@@ -11,6 +14,16 @@ interface MainContentProps {
 }
 
 export default function MainContent({ freeboardData, leetData }: MainContentProps) {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  const handleSchoolBoardClick = (e: React.MouseEvent) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      setShowAuthModal(true);
+    }
+  };
+
   return (
     <main className="min-h-screen py-24 px-4 sm:px-6 lg:px-8">
       {/* 로고 섹션 */}
@@ -87,7 +100,8 @@ export default function MainContent({ freeboardData, leetData }: MainContentProp
             </div>
             <div className="shrink-0 max-w-[160px] pr-4">
               <Link
-                href="/board/schools"
+                href={isAuthenticated ? "/board/schools" : "#"}
+                onClick={handleSchoolBoardClick}
                 className="px-5 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors text-sm font-medium whitespace-nowrap"
               >
                 게시판 바로가기
@@ -101,6 +115,10 @@ export default function MainContent({ freeboardData, leetData }: MainContentProp
           </div>
         </div>
       </div>
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </main>
   );
 }
