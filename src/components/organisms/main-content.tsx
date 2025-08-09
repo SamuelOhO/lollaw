@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { CardStack } from '@/components/ui/card-stack';
 import SchoolSection from '@/components/organisms/school-section';
 import type { TopPost } from '@/hooks/useTopPosts';
-import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/molecules/auth-modal';
 
 interface MainContentProps {
@@ -15,19 +15,10 @@ interface MainContentProps {
 
 export default function MainContent({ freeboardData, leetData }: MainContentProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-    };
-    checkAuth();
-  }, []);
+  const { isAuthenticated } = useAuth();
 
   const handleSchoolBoardClick = (e: React.MouseEvent) => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       e.preventDefault();
       setShowAuthModal(true);
     }
@@ -109,7 +100,7 @@ export default function MainContent({ freeboardData, leetData }: MainContentProp
             </div>
             <div className="shrink-0 max-w-[160px] pr-4">
               <Link
-                href={isLoggedIn ? "/board/schools" : "#"}
+                href={isAuthenticated ? "/board/schools" : "#"}
                 onClick={handleSchoolBoardClick}
                 className="px-5 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors text-sm font-medium whitespace-nowrap"
               >

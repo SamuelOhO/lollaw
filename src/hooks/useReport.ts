@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { CreateReportDto, Report } from '@/types/report';
 import { toast } from 'react-hot-toast';
+import { logError } from '@/utils/error-handler';
 
 export const useReport = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +16,7 @@ export const useReport = () => {
         .insert([reportData]);
 
       if (error) {
-        console.error('신고 처리 중 오류:', error);
+        logError(error, 'Create report error');
         toast.error('신고 처리 중 오류가 발생했습니다.');
         return false;
       }
@@ -23,7 +24,7 @@ export const useReport = () => {
       toast.success('신고가 접수되었습니다.');
       return true;
     } catch (error) {
-      console.error('신고 처리 중 오류:', error);
+      logError(error, 'Create report unexpected error');
       toast.error('신고 처리 중 오류가 발생했습니다.');
       return false;
     } finally {
@@ -40,14 +41,14 @@ export const useReport = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('신고 목록 조회 중 오류:', error);
+        logError(error, 'Get user reports error');
         toast.error('신고 목록을 불러오는 중 오류가 발생했습니다.');
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('신고 목록 조회 중 오류:', error);
+      logError(error, 'Get user reports unexpected error');
       toast.error('신고 목록을 불러오는 중 오류가 발생했습니다.');
       return [];
     } finally {

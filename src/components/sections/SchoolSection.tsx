@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 const cards = [
   {
@@ -23,9 +24,7 @@ const cards = [
 
 export default function ClientSection() {
   const [currentCards, setCurrentCards] = useState(cards);
-  // 인증 상태 가정 (임시)
-  const isAuthenticated = true;
-  const isVerified = true;
+  const { isAuthenticated, isSchoolVerified } = useAuth();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,27 +38,52 @@ export default function ClientSection() {
     return () => clearInterval(interval);
   }, []);
 
+  // 인증 상태에 따라 카드 내용 동적 변경
+  const getDisplayCards = () => {
+    if (!isAuthenticated) {
+      return [cards[0]]; // 로그인 필요 카드만 표시
+    } else if (!isSchoolVerified) {
+      return [
+        {
+          id: 3,
+          title: '학교 인증이 필요합니다',
+          content: '학교별 게시판 이용을 위해 재학/졸업 인증을 진행해주세요.',
+          buttonText: '인증하기',
+          buttonLink: '/auth/verify-school',
+        }
+      ];
+    } else {
+      return [cards[1]]; // 학교별 게시판 카드 표시
+    }
+  };
+
+  const displayCards = getDisplayCards();
+
   return (
-    <div className="relative h-60 w-full max-w-md mx-auto">
-      {currentCards.map((card, index) => (
+    <div className="relative h-60 w-60 md:h-60 md:w-96">
+      {displayCards.map((card, index) => (
         <motion.div
           key={card.id}
-          className="absolute w-full bg-gradient-to-br from-blue-500/40 to-purple-600/40 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-white/20"
+          className="absolute inset-0 h-60 w-60 md:h-60 md:w-96 rounded-3xl p-4 shadow-xl border border-neutral-200 dark:border-white/[0.1] shadow-black/[0.1] dark:shadow-white/[0.05] flex flex-col justify-between"
           style={{
             transformOrigin: 'top center',
           }}
           animate={{
-            top: index * -10,
+            top: index * -4,
             scale: 1 - index * 0.06,
-            zIndex: cards.length - index,
+            zIndex: displayCards.length - index,
           }}
         >
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{card.title}</h3>
-            <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-2">{card.content}</p>
+          <div className="font-normal text-neutral-700 dark:text-neutral-200">
+            {card.content}
+          </div>
+          <div>
+            <p className="text-neutral-500 font-medium dark:text-white">
+              {card.title}
+            </p>
             <Link
               href={card.buttonLink}
-              className="inline-block mt-6 px-6 py-2 bg-white/90 hover:bg-white text-blue-600 rounded-lg transition-colors text-center font-semibold shadow-sm"
+              className="text-neutral-200 font-normal dark:text-neutral-200 mt-2 inline-block px-4 py-2 bg-black dark:bg-white dark:text-black text-white rounded-md text-sm"
             >
               {card.buttonText}
             </Link>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
+import { logError } from '@/utils/error-handler';
 
 interface UnauthorizedPageProps {
   params: {
@@ -33,7 +34,7 @@ export default function UnauthorizedPage({ params }: UnauthorizedPageProps) {
         if (schoolError) throw schoolError;
         setSchool(schoolData);
       } catch (error) {
-        console.error('학교 정보 로딩 오류:', error);
+        logError(error, 'School info fetch error');
         setError('학교 정보를 찾을 수 없습니다.');
       } finally {
         setLoading(false);

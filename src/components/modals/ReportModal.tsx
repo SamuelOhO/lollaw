@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
+import { logError } from '@/utils/error-handler';
 
 interface ReportModalProps {
   targetId: number;
@@ -47,7 +48,7 @@ export const ReportModal = ({ targetId, targetType, onClose, onSubmit }: ReportM
       ]);
 
       if (error) {
-        console.error('신고 중 오류:', error);
+        logError(error, `Report ${targetType} error`);
         if (error.code === '23505') {
           toast.error('이미 신고한 게시물입니다.');
         } else {
@@ -59,7 +60,7 @@ export const ReportModal = ({ targetId, targetType, onClose, onSubmit }: ReportM
       toast.success('신고가 접수되었습니다.');
       onClose();
     } catch (err) {
-      console.error('신고 중 오류:', err);
+      logError(err, `Report ${targetType} unexpected error`);
       toast.error('신고 처리 중 오류가 발생했습니다.');
     } finally {
       setSubmitting(false);

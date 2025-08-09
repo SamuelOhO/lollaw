@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useVerificationStore } from '@/store/verification';
 import * as React from 'react';
+import { logError } from '@/utils/error-handler';
 
 interface PageProps {
   params: {
@@ -43,7 +44,7 @@ export default function VerifySchoolPage({ params }: PageProps) {
       setStatus('pending');
       alert('인증 코드가 이메일로 발송되었습니다.');
     } catch (error: any) {
-      console.error('인증 요청 에러:', error);
+      logError(error, 'School verification request error');
       alert(error.message || '인증 요청 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -77,7 +78,7 @@ export default function VerifySchoolPage({ params }: PageProps) {
       alert('이메일 인증이 완료되었습니다.');
       window.location.href = `/board/${slug}`;
     } catch (error: any) {
-      console.error('인증 코드 확인 에러:', error);
+      logError(error, 'School verification code check error');
       alert(error.message || '인증 코드 확인 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import { toast } from 'react-hot-toast';
+import { logError } from '@/utils/error-handler';
 
 interface EditPageProps {
   params: {
@@ -36,7 +37,7 @@ export default function EditPage({ params }: EditPageProps) {
         .single();
 
       if (error) {
-        console.error('Error fetching post:', error);
+        logError(error, 'Post fetch error for edit');
         toast.error('게시글을 불러오는데 실패했습니다.');
         router.push(`/board/${params.slug}`);
         return;
@@ -79,7 +80,7 @@ export default function EditPage({ params }: EditPageProps) {
       toast.success('게시글이 수정되었습니다.');
       router.push(`/board/${params.slug}/post/${params.id}`);
     } catch (error) {
-      console.error('Error updating post:', error);
+      logError(error, 'Post update error');
       toast.error('게시글 수정 중 오류가 발생했습니다.');
     }
   };

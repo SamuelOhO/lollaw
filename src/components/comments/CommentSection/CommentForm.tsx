@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { CommentFormData } from '@/types'
+import { logError } from '@/utils/error-handler'
 
 interface CommentFormProps {
-  onSubmit: (commentData: CommentFormData) => Promise<void>
+  onSubmit: (comment: { content: string; post_id: number }) => Promise<void>
 }
 
 export default function CommentForm({ onSubmit }: CommentFormProps) {
@@ -25,7 +25,7 @@ export default function CommentForm({ onSubmit }: CommentFormProps) {
       })
       setContent('')
     } catch (error) {
-      console.error('댓글 작성 중 오류:', error)
+      logError(error, 'Comment form submit error')
     } finally {
       setIsSubmitting(false)
     }

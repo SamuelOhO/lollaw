@@ -2,30 +2,10 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { createClient } from '@/utils/supabase/client';
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Navbar() {
-  const [session, setSession] = useState<any>(null);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setSession(session);
-    };
-    getSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+  const { isAuthenticated, logout, isLoggingOut } = useAuth();
 
   return (
     <nav className="bg-white border-b border-gray-200 fixed w-full top-0 z-50">
@@ -56,12 +36,13 @@ export default function Navbar() {
             >
               마이페이지
             </Link>
-            {session ? (
+            {isAuthenticated ? (
               <button
-                onClick={() => supabase.auth.signOut()}
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                onClick={() => logout()}
+                disabled={isLoggingOut}
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50"
               >
-                로그아웃
+                {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
               </button>
             ) : (
               <Link

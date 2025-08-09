@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import type { Category } from '@/types/board';
-import { createClient } from '@/utils/supabase/client';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import AuthRequiredModal from '../auth/AuthRequiredModal';
 
 export interface WriteButtonProps {
@@ -13,14 +13,10 @@ export interface WriteButtonProps {
 export default function WriteButton({ category }: WriteButtonProps) {
   const router = useRouter();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const handleClick = async () => {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (!isAuthenticated) {
       localStorage.setItem('intendedPath', `/board/${category.slug}/write`);
       setShowAuthModal(true);
       return;

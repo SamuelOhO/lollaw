@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { usePost } from '@/hooks/usePost';
+import { logError } from '@/utils/error-handler';
+import { createClient } from '@/utils/supabase/client';
 import ReportModal from '@/components/molecules/report-modal';
 
 interface PostDetailProps {
@@ -13,94 +16,37 @@ interface PostDetailProps {
   slug: string;
 }
 
-export default function PostDetail({ postId, slug }: PostDetailProps) {
+const PostDetail = memo(function PostDetail({ postId, slug }: PostDetailProps) {
   const router = useRouter();
-  const [post, setPost] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
+  const { user, isAuthenticated } = useAuth();
+  const { 
+    post, 
+    isLoading, 
+    isError, 
+    error, 
+    toggleLike, 
+    isLiked,
+    likesCount 
+  } = usePost(parseInt(postId));
+  
   const [showReportModal, setShowReportModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const supabase = createClient();
 
-  useEffect(() => {
-    const fetchPost = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-
-      const { data: post, error } = await supabase
-        .from('posts')
-        .select('*, profiles(*)')
-        .eq('id', postId)
-        .single();
-
-      if (error) {
-        console.error('게시글 조회 중 오류:', error);
-        toast.error('게시글을 불러오는 중 오류가 발생했습니다.');
-        return;
-      }
-
-      setPost(post);
-      setIsLoading(false);
-
-      // 좋아요 상태 확인
-      if (user) {
-        const { data: likeData } = await supabase
-          .from('likes')
-          .select('*')
-          .eq('post_id', postId)
-          .eq('user_id', user.id)
-          .single();
-
-        setIsLiked(!!likeData);
-      }
-
-      // 좋아요 수 조회
-      const { count } = await supabase
-        .from('likes')
-        .select('*', { count: 'exact' })
-        .eq('post_id', postId);
-
-      setLikesCount(count || 0);
-    };
-
-    fetchPost();
-  }, [postId, supabase]);
-
-  const handleLike = async () => {
-    if (!user) {
+  const handleLike = useCallback(async () => {
+    if (!isAuthenticated) {
       toast.error('로그인이 필요합니다.');
       return;
     }
 
     try {
-      if (isLiked) {
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setIsLiked(false);
-        setLikesCount(prev => prev - 1);
-      } else {
-        const { error } = await supabase
-          .from('likes')
-          .insert([{ post_id: postId, user_id: user.id }]);
-
-        if (error) throw error;
-        setIsLiked(true);
-        setLikesCount(prev => prev + 1);
-      }
+      toggleLike();
     } catch (error) {
-      console.error('좋아요 처리 중 오류:', error);
-      toast.error('좋아요 처리 중 오류가 발생했습니다.');
+      logError(error, 'Post like toggle error');
     }
-  };
+  }, [isAuthenticated, toggleLike]);
 
-  const handleDelete = async () => {
-    if (!user || post.user_id !== user.id) {
+  const handleDelete = useCallback(async () => {
+    if (!user || !post || post.user_id !== user.id) {
       toast.error('삭제 권한이 없습니다.');
       return;
     }
@@ -120,17 +66,42 @@ export default function PostDetail({ postId, slug }: PostDetailProps) {
       toast.success('게시글이 삭제되었습니다.');
       router.push(`/board/${slug}`);
     } catch (error) {
-      console.error('게시글 삭제 중 오류:', error);
-      toast.error('게시글 삭제 중 오류가 발생했습니다.');
+      logError(error, 'Post delete error');
     }
-  };
+  }, [user, post, postId, slug, router, supabase]);
 
   if (isLoading) {
-    return <div>로딩 중...</div>;
+    return (
+      <div className="mx-auto max-w-4xl p-4">
+        <div className="animate-pulse">
+          <div className="mb-4 h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          <div className="mb-2 h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  if (!post) {
-    return <div>게시글을 찾을 수 없습니다.</div>;
+  if (isError || !post) {
+    return (
+      <div className="mx-auto max-w-4xl p-4">
+        <div className="text-center py-12">
+          <p className="text-red-500 mb-4">
+            {error?.message || '게시글을 찾을 수 없습니다.'}
+          </p>
+          <button
+            onClick={() => router.push(`/board/${slug}`)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            목록으로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const isAuthor = user && post.user_id === user.id;
@@ -142,7 +113,7 @@ export default function PostDetail({ postId, slug }: PostDetailProps) {
           <div>
             <h1 className="text-2xl font-bold">{post.title}</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              작성자: {post.profiles?.username || '알 수 없음'} |{' '}
+              작성자: {post.profiles?.display_name || '알 수 없음'} |{' '}
               {format(new Date(post.created_at), 'PPP', { locale: ko })}
             </p>
           </div>
@@ -189,11 +160,13 @@ export default function PostDetail({ postId, slug }: PostDetailProps) {
       </div>
 
       <ReportModal
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
         targetId={postId}
         targetType="post"
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
       />
     </div>
   );
-} 
+});
+
+export default PostDetail;
