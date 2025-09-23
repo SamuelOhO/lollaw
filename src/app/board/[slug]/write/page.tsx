@@ -62,20 +62,29 @@ export default function WritePage({ params }: WritePageProps) {
         return;
       }
 
-      // 게시글 저장
-      const { error: postError } = await supabase.from('posts').insert({
-        title,
-        content,
-        category_id: category.id,
-        user_id: session.user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      // 게시글 저장 및 새 글 ID 반환
+      const { data: created, error: postError } = await supabase
+        .from('posts')
+        .insert({
+          title,
+          content,
+          category_id: category.id,
+          user_id: session.user.id,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
 
       if (postError) throw postError;
 
-      router.push(`/board/${slug}`);
-      router.refresh();
+      // 상세 페이지로 즉시 이동하여 새로고침 없이 반영
+      if (created?.id) {
+        router.push(`/board/${slug}/${created.id}`);
+      } else {
+        // fallback: 목록으로 이동
+        router.push(`/board/${slug}`);
+      }
     } catch (error) {
       logError(error, 'Post creation error');
       alert('글 작성에 실패했습니다');

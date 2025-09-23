@@ -39,18 +39,45 @@ export async function POST(
       return NextResponse.json({ error: '존재하지 않는 댓글입니다.' }, { status: 404 });
     }
 
-    // 신고 추가와 댓글 신고 횟수 증가를 트랜잭션으로 처리
-    const { error: transactionError } = await supabase.rpc('handle_comment_report', {
-      p_comment_id: commentId,
-      p_user_id: user.id,
-      p_reason: reason.trim()
+    // 중복 신고 여부 확인 (유니크 제약 사용)
+    const { data: existing, error: findError } = await supabase
+      .from('reports')
+      .select('id')
+      .eq('target_type', 'comment')
+      .eq('target_id', commentId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (findError && findError.code !== 'PGRST116') {
+      console.error('신고 조회 중 오류:', findError);
+      return NextResponse.json({ error: '신고 처리에 실패했습니다.' }, { status: 500 });
+    }
+
+    if (existing) {
+      return NextResponse.json({ error: '이미 신고한 댓글입니다.' }, { status: 400 });
+    }
+
+    // 신고 생성
+    const { error: insertError } = await supabase.from('reports').insert({
+      target_type: 'comment',
+      target_id: commentId,
+      user_id: user.id,
+      reason: reason.trim()
     });
 
-    if (transactionError) {
-      console.error('신고 처리 중 오류:', transactionError);
-      if (transactionError.message?.includes('already reported')) {
-        return NextResponse.json({ error: '이미 신고한 댓글입니다.' }, { status: 400 });
-      }
+    if (insertError) {
+      console.error('신고 저장 중 오류:', insertError);
+      return NextResponse.json({ error: '신고 처리에 실패했습니다.' }, { status: 500 });
+    }
+
+    // 댓글 신고 카운트 증가
+    const { error: updateError } = await supabase
+      .from('comments')
+      .update({ report_count: (comment.report_count || 0) + 1 })
+      .eq('id', commentId);
+
+    if (updateError) {
+      console.error('신고 카운트 업데이트 오류:', updateError);
       return NextResponse.json({ error: '신고 처리에 실패했습니다.' }, { status: 500 });
     }
 
@@ -87,15 +114,38 @@ export async function DELETE(
       return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
     }
 
-    // 기존 신고 확인 및 삭제, 신고 횟수 감소를 트랜잭션으로 처리
-    const { error: transactionError } = await supabase.rpc('handle_comment_report_cancel', {
-      p_comment_id: commentId,
-      p_user_id: user.id
-    });
+    // 해당 신고 레코드 삭제
+    const { error: deleteError } = await supabase
+      .from('reports')
+      .delete()
+      .eq('target_type', 'comment')
+      .eq('target_id', commentId)
+      .eq('user_id', user.id);
 
-    if (transactionError) {
-      console.error('신고 취소 중 오류:', transactionError);
+    if (deleteError) {
+      console.error('신고 취소 중 오류:', deleteError);
       return NextResponse.json({ error: '신고 취소에 실패했습니다.' }, { status: 500 });
+    }
+
+    // 댓글 신고 카운트 감소(0 미만 방지)
+    const { data: current, error: curErr } = await supabase
+      .from('comments')
+      .select('report_count')
+      .eq('id', commentId)
+      .single();
+
+    if (curErr) {
+      console.error('신고 카운트 조회 오류:', curErr);
+    } else {
+      const nextCount = Math.max((current?.report_count || 0) - 1, 0);
+      const { error: decErr } = await supabase
+        .from('comments')
+        .update({ report_count: nextCount })
+        .eq('id', commentId);
+
+      if (decErr) {
+        console.error('신고 카운트 감소 오류:', decErr);
+      }
     }
 
     return NextResponse.json({ 

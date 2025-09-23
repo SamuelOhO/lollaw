@@ -103,13 +103,20 @@ export default function CommentSection({
     const commentId = await onAddComment(content, parentId);
     if (commentId) {
       setReplyingTo(null);
+      const el = document.getElementById(`comment-${commentId}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     return commentId;
   };
 
   // 메인 댓글 작성 핸들러
   const handleMainComment = async (content: string) => {
-    return await onAddComment(content);
+    const id = await onAddComment(content);
+    if (id) {
+      const el = document.getElementById(`comment-${id}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    return id;
   };
 
   if (loading) {
@@ -170,7 +177,7 @@ export default function CommentSection({
       </div>
 
       {/* 댓글 목록 */}
-      <div className="space-y-4">
+      <div id="comments-top" className="space-y-4">
         {comments.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</p>

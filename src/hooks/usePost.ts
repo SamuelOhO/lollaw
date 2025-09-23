@@ -11,6 +11,8 @@ interface PostData extends PostWithProfile {
   likes_count: number;
   comments_count: number;
   user_is_liked: boolean;
+  report_count: number;
+  is_hidden: boolean;
 }
 
 export function usePost(postId: number) {
@@ -251,6 +253,8 @@ export function usePost(postId: number) {
     // 편의 속성들
     isLiked: post?.user_is_liked || false,
     likesCount: post?.likes_count || 0,
-    commentsCount: post?.comments_count || 0
+    commentsCount: post?.comments_count || 0,
+    reportCount: post?.report_count || 0,
+    isHidden: post?.is_hidden || false
   };
 }

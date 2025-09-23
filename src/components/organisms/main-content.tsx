@@ -1,12 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { CardStack } from '@/components/ui/card-stack';
-import SchoolSection from '@/components/organisms/school-section';
-import type { TopPost } from '@/hooks/useTopPosts';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import AuthModal from '@/components/molecules/auth-modal';
+import { CardStack } from '@/components/ui/card-stack';
+import type { CardItem } from '@/components/ui/card-stack';
+import type { Post } from '@/types';
+import SchoolSection from '@/components/organisms/school-section';
+import type { TopPost } from '@/hooks/useTopPosts';
 
 interface MainContentProps {
   freeboardData: TopPost[];
@@ -15,13 +18,22 @@ interface MainContentProps {
 
 export default function MainContent({ freeboardData, leetData }: MainContentProps) {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { isAuthenticated, isSchoolVerified } = useAuth();
 
   const handleSchoolBoardClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
       e.preventDefault();
       setShowAuthModal(true);
+      return;
     }
+    if (!isSchoolVerified) {
+      e.preventDefault();
+      router.push('/auth/verify-school');
+      return;
+    }
+    // 인증된 사용자는 학교 게시판으로 이동
+    router.push('/board/schools');
   };
 
   return (
@@ -100,7 +112,7 @@ export default function MainContent({ freeboardData, leetData }: MainContentProp
             </div>
             <div className="shrink-0 max-w-[160px] pr-4">
               <Link
-                href={isAuthenticated ? "/board/schools" : "#"}
+                href="#"
                 onClick={handleSchoolBoardClick}
                 className="px-5 py-2 bg-neutral-800 text-white rounded-lg hover:bg-neutral-700 transition-colors text-sm font-medium whitespace-nowrap"
               >

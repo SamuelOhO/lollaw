@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { CommentWithProfile, CommentFormData } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,48 +8,43 @@ import { toast } from 'react-hot-toast';
 import { logError } from '@/utils/error-handler';
 
 // 댓글들을 계층구조로 변환하는 함수
-const organizeComments = (comments: CommentWithProfile[]): CommentWithProfile[] => {
+const organizeComments = useCallback((comments: CommentWithProfile[]): CommentWithProfile[] => {
   // 방어 코드: comments가 undefined이거나 배열이 아닌 경우 빈 배열 반환
   if (!Array.isArray(comments) || comments.length === 0) {
     return [];
   }
 
-  const commentsMap = new Map<number, CommentWithProfile>();
+  const commentMap = new Map<number, CommentWithProfile>();
   const rootComments: CommentWithProfile[] = [];
 
-  // 모든 댓글을 맵에 저장하고 replies 배열 초기화
+  // 모든 댓글을 맵에 추가
   comments.forEach(comment => {
-    if (comment && typeof comment === 'object' && comment.id) {
-      commentsMap.set(comment.id, { ...comment, replies: [] });
-    }
+    commentMap.set(comment.id, { ...comment, replies: [] });
   });
 
-  // parent_id에 따라 댓글들을 분류
+  // 댓글을 계층 구조로 정리 (1단계까지만)
   comments.forEach(comment => {
-    if (!comment || !comment.id) return;
-    
-    const commentWithReplies = commentsMap.get(comment.id);
-    if (!commentWithReplies) return;
-    
     if (comment.parent_id) {
-      // 대댓글인 경우
-      const parentComment = commentsMap.get(comment.parent_id);
-      if (parentComment && Array.isArray(parentComment.replies)) {
-        parentComment.replies.push(commentWithReplies);
+      const parent = commentMap.get(comment.parent_id);
+      if (parent) {
+        // 부모 댓글의 replies 배열에 추가 (1단계까지만)
+        parent.replies!.push(commentMap.get(comment.id)!);
       }
     } else {
-      // 루트 댓글인 경우
-      rootComments.push(commentWithReplies);
+      // 최상위 댓글
+      rootComments.push(commentMap.get(comment.id)!);
     }
   });
 
   return rootComments;
-};
+}, []);
 
 export const useComments = (postId: number, initialComments?: CommentWithProfile[]) => {
   const [comments, setComments] = useState<CommentWithProfile[]>(
     initialComments ? organizeComments(initialComments) : []
   );
+  // 좋아요 연타 방지를 위한 가드
+  const [pendingLikeIds, setPendingLikeIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(!initialComments);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
@@ -365,6 +360,10 @@ export const useComments = (postId: number, initialComments?: CommentWithProfile
       return;
     }
 
+    // 중복 요청 방지
+    if (pendingLikeIds.has(commentId)) return;
+    setPendingLikeIds(prev => new Set(prev).add(commentId));
+
     try {
       // 현재 좋아요 상태 확인
       const { data: existingLike, error: checkError } = await supabase
@@ -429,6 +428,13 @@ export const useComments = (postId: number, initialComments?: CommentWithProfile
     } catch (error) {
       logError(error, 'Comment like toggle error');
       toast.error('좋아요 처리 중 오류가 발생했습니다.');
+    }
+    finally {
+      setPendingLikeIds(prev => {
+        const next = new Set(prev);
+        next.delete(commentId);
+        return next;
+      });
     }
   };
 

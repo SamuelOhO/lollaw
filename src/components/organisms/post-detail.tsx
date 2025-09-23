@@ -1,114 +1,69 @@
 'use client';
 
-import { useState, useCallback, memo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { usePost } from '@/hooks/usePost';
+import { useComments } from '@/hooks/useComments';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { toast } from 'react-hot-toast';
+import CommentSection from '@/components/comments/CommentSection';
+import CategorySidebar from '@/components/molecules/category-sidebar';
+import { useCategory } from '@/hooks/useCategory';
 import { useAuth } from '@/hooks/useAuth';
-import { usePost } from '@/hooks/usePost';
-import { logError } from '@/utils/error-handler';
-import { createClient } from '@/utils/supabase/client';
-import ReportModal from '@/components/molecules/report-modal';
 
 interface PostDetailProps {
   postId: string;
-  slug: string;
 }
 
-const PostDetail = memo(function PostDetail({ postId, slug }: PostDetailProps) {
+export default function PostDetail({ postId }: PostDetailProps) {
+  const params = useParams();
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
-  const { 
-    post, 
-    isLoading, 
-    isError, 
-    error, 
-    toggleLike, 
-    isLiked,
-    likesCount 
-  } = usePost(parseInt(postId));
+  const slug = params.slug as string;
+  const { user } = useAuth();
   
-  const [showReportModal, setShowReportModal] = useState(false);
-  const supabase = createClient();
+  const {
+    post,
+    isLoading,
+    error,
+    toggleLike,
+    isLiked,
+    likesCount,
+    isToggling,
+    reportCount,
+    isHidden
+  } = usePost(parseInt(postId));
 
-  const handleLike = useCallback(async () => {
-    if (!isAuthenticated) {
-      toast.error('로그인이 필요합니다.');
+  const { category, subcategories } = useCategory(slug);
+
+  const handleLike = async () => {
+    if (!user) {
+      // 로그인 필요 모달 표시 로직
       return;
     }
-
-    try {
-      toggleLike();
-    } catch (error) {
-      logError(error, 'Post like toggle error');
-    }
-  }, [isAuthenticated, toggleLike]);
-
-  const handleDelete = useCallback(async () => {
-    if (!user || !post || post.user_id !== user.id) {
-      toast.error('삭제 권한이 없습니다.');
-      return;
-    }
-
-    if (!window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', postId);
-
-      if (error) throw error;
-
-      toast.success('게시글이 삭제되었습니다.');
-      router.push(`/board/${slug}`);
-    } catch (error) {
-      logError(error, 'Post delete error');
-    }
-  }, [user, post, postId, slug, router, supabase]);
+    await toggleLike();
+  };
 
   if (isLoading) {
-    return (
-      <div className="mx-auto max-w-4xl p-4">
-        <div className="animate-pulse">
-          <div className="mb-4 h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-          <div className="mb-2 h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-          <div className="space-y-3">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-4/5"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className="mx-auto max-w-4xl p-4">로딩 중...</div>;
   }
 
-  if (isError || !post) {
-    return (
-      <div className="mx-auto max-w-4xl p-4">
-        <div className="text-center py-12">
-          <p className="text-red-500 mb-4">
-            {error?.message || '게시글을 찾을 수 없습니다.'}
-          </p>
-          <button
-            onClick={() => router.push(`/board/${slug}`)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            목록으로 돌아가기
-          </button>
-        </div>
-      </div>
-    );
+  if (error || !post) {
+    return <div className="mx-auto max-w-4xl p-4">게시글을 불러올 수 없습니다.</div>;
   }
-
-  const isAuthor = user && post.user_id === user.id;
 
   return (
-    <div className="mx-auto max-w-4xl p-4">
-      <div className="mb-8 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+    <div className="mx-auto max-w-6xl p-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* 왼쪽: 카테고리 사이드바 */}
+      <aside className="hidden lg:block lg:col-span-1">
+        {category && (
+          <CategorySidebar
+            mainCategory={category}
+            subcategories={subcategories}
+            pathname={`/board/${slug}/${postId}`}
+          />
+        )}
+      </aside>
+
+      <div className="lg:col-span-3 mb-8 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{post.title}</h1>
@@ -124,49 +79,49 @@ const PostDetail = memo(function PostDetail({ postId, slug }: PostDetailProps) {
                 isLiked
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
-              }`}
+              } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isToggling}
             >
               <span>👍</span>
               <span>{likesCount}</span>
             </button>
-            {isAuthor ? (
-              <>
-                <button
-                  onClick={() => router.push(`/board/${slug}/edit/${postId}`)}
-                  className="rounded-lg bg-gray-100 px-3 py-1 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="rounded-lg bg-red-500 px-3 py-1 text-white hover:bg-red-600"
-                >
-                  삭제
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="rounded-lg bg-gray-100 px-3 py-1 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              >
-                신고
-              </button>
+            {/* 신고 카운트 표시 */}
+            {reportCount > 0 && (
+              <div className="flex items-center gap-1 rounded-lg px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                <span>🚨</span>
+                <span>{reportCount}</span>
+              </div>
             )}
           </div>
         </div>
+
+        {/* 보조 내비게이션: 목록으로, 이전/다음 자리 */}
+        <div className="mb-4 flex items-center gap-2 text-sm">
+          <button
+            onClick={() => router.push(`/board/${slug}`)}
+            className="rounded bg-gray-100 px-2 py-1 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+          >
+            ← 목록으로
+          </button>
+        </div>
+
         <div className="prose max-w-none dark:prose-invert">
-          {post.content}
+          {/* 신고 누적으로 숨김 처리된 경우 */}
+          {isHidden ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <p className="text-lg font-medium">신고되어 안보이는 글입니다.</p>
+              <p className="text-sm mt-2">신고가 누적되어 해당 게시글을 볼 수 없습니다.</p>
+            </div>
+          ) : (
+            post.content
+          )}
         </div>
       </div>
 
-      <ReportModal
-        targetId={postId}
-        targetType="post"
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-      />
+      {/* 댓글 섹션 */}
+      <div className="lg:col-span-3">
+        <CommentSection postId={parseInt(postId)} />
+      </div>
     </div>
   );
-});
-
-export default PostDetail;
+}

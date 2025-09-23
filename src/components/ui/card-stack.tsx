@@ -20,10 +20,14 @@ export const CardStack = ({
   items,
   offset,
   scaleFactor,
+  onCardClick,
+  getHref,
 }: {
   items: CardItem[];
   offset?: number;
   scaleFactor?: number;
+  onCardClick?: (card: CardItem, event: React.MouseEvent) => void;
+  getHref?: (card: CardItem) => string;
 }) => {
   const CARD_OFFSET = offset || 10;
   const SCALE_FACTOR = scaleFactor || 0.06;
@@ -56,8 +60,8 @@ export const CardStack = ({
   return (
     <div className="relative h-60 w-60 md:h-60 md:w-96">
       {cards.map((card, index) => {
-        return (
-          <Link key={card.id} href={`/board/${card.categorySlug}/${card.id}`}>
+        const href = getHref ? getHref(card) : `/board/${card.categorySlug}/${card.id}`;
+        const content = (
             <motion.div
               className={cn(
                 "absolute dark:bg-black bg-white h-60 w-60 md:h-60 md:w-96 rounded-3xl p-4 shadow-xl border border-neutral-200 dark:border-white/[0.1] shadow-black/[0.1] dark:shadow-white/[0.05] flex flex-col justify-between cursor-pointer hover:border-coral-500 transition-colors"
@@ -70,6 +74,7 @@ export const CardStack = ({
                 scale: 1 - index * SCALE_FACTOR, // decrease scale for cards that are behind
                 zIndex: cards.length - index, //  decrease z-index for the cards that are behind
               }}
+              onClick={(e) => onCardClick?.(card, e)}
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between mb-2">
@@ -91,6 +96,20 @@ export const CardStack = ({
                 </p>
               </div>
             </motion.div>
+        );
+
+        // 링크가 필요 없고 onCardClick만 사용하는 경우
+        if (!getHref && onCardClick) {
+          return (
+            <div key={card.id} role="button" tabIndex={0}>
+              {content}
+            </div>
+          );
+        }
+
+        return (
+          <Link key={card.id} href={href} onClick={onCardClick ? (e)=>{ /* 링크 이동 막고 콜백에서 제어 */ e.preventDefault(); onCardClick(card, e);} : undefined}>
+            {content}
           </Link>
         );
       })}

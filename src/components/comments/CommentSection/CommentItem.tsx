@@ -37,7 +37,7 @@ const CommentItem = memo(function CommentItem({
 
   // 메모이제이션된 계산값들
   const isOwner = useMemo(() => currentUserId === comment.user_id, [currentUserId, comment.user_id]);
-  const canReply = useMemo(() => depth < 2, [depth]); // 최대 2단계까지만 대댓글 허용
+  const canReply = useMemo(() => depth < 1, [depth]); // 최대 1단계까지만 대댓글 허용
   const formattedDate = useMemo(() => 
     format(new Date(comment.created_at), 'PPp', { locale: ko }),
     [comment.created_at]
@@ -79,7 +79,7 @@ const CommentItem = memo(function CommentItem({
   }, [onCancelReport, comment.id]);
 
   return (
-    <div className={`${depth > 0 ? 'ml-8 mt-4' : 'mt-6'} border-l-2 border-gray-100 pl-4`}>
+    <div id={`comment-${comment.id}`} className={`${depth > 0 ? 'ml-8 mt-4' : 'mt-6'} border-l-2 border-gray-100 pl-4`}>
       <div className="flex items-start space-x-3">
         {/* 프로필 이미지 */}
         <div className="flex-shrink-0">
@@ -171,11 +171,11 @@ const CommentItem = memo(function CommentItem({
               </button>
             )}
 
-            {/* 답글 버튼 */}
-            {canReply && (
+            {/* 답글 버튼 - 1단계까지만 허용 */}
+            {depth < 1 && (
               <button
-                onClick={() => setIsReplying(!isReplying)}
-                className="text-sm text-gray-500 hover:text-blue-500"
+                onClick={() => setIsReplying(true)}
+                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 답글
               </button>
